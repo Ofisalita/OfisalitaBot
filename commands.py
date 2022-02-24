@@ -2,6 +2,7 @@ import os
 from datetime import datetime
 from utils import try_msg
 
+import data
 from config.logger import log_command
 
 
@@ -17,6 +18,20 @@ def start(update, context):
 def tup(update, context):
     log_command(update)
     message = "tup"
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
+
+
+def desiglar(update, context):
+    log_command(update)
+    try:
+        arg = update.message.text[(update.message.text.index(" ") + 1):]
+    except ValueError:
+        # No arg
+        return
+    message = data.acronyms.get(arg, "🤷")
     try_msg(context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
