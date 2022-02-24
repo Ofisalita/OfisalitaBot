@@ -38,3 +38,21 @@ def send_long_message(bot, **params):
         send_long_message(bot, text=rest_text, **params_copy)
     else:
         try_msg(bot, text=text, **params)
+
+
+def get_arg(update):
+    try:
+        arg = update.message.text[(update.message.text.index(" ") + 1):]
+    except ValueError:
+        arg = ""
+    return arg
+
+
+def generate_acronym(string):
+    string_list = string.split()
+    out = ""
+    for word in string_list:
+        out += word[0]
+        if word.find("?") > 0:
+            out += "?"
+    return out.lower()
