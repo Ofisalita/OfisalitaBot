@@ -1,6 +1,6 @@
 import os
 from datetime import datetime
-from utils import try_msg
+from utils import generate_acronym, get_arg, try_msg
 
 import data
 from config.logger import log_command
@@ -26,16 +26,23 @@ def tup(update, context):
 
 def desiglar(update, context):
     log_command(update)
-    try:
-        arg = update.message.text[(update.message.text.index(" ") + 1):]
-    except ValueError:
-        # No arg
-        return
+    arg = get_arg(update)
     message = data.acronyms.get(arg, "🤷")
     try_msg(context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
             text=message)
+
+
+def siglar(update, context):
+    log_command(update)
+    arg = get_arg(update)
+    acronym = generate_acronym(arg)
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=acronym)
+
 
 # Admin Commands
 
