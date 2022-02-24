@@ -1,9 +1,9 @@
 # OfisalitaBot
 
 ## Micro-tutorial
-Para agregar un comando, se debe agregar el [Handler](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.html#handlers) apropiado en `main.py`. El más común es `[CommandHandler](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.html#handlers)`, que parsea los mensajes de tipo `/comando`. A este handler se le da la función de callback que llamará, y ésta debe ir en `commands.py`. En esa función se puede hacer lo que sea que Python pueda hacer.
+Para agregar un comando, se debe agregar el [Handler](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.html#handlers) apropiado en `main.py`. El más común es [`CommandHandler`](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.html#handlers), que parsea los mensajes de tipo `/comando`. A este handler se le da la función de callback que llamará, y ésta debe ir en `commands.py`. En esa función se puede hacer lo que sea que Python pueda hacer.
 
-Para mandar un mensaje está creada la función `try_msg` en los `utils`, que es solamente un proxy de la función real (`[context.bot.send_message](https://python-telegram-bot.readthedocs.io/en/stable/telegram.bot.html#telegram.Bot.send_message)`) y su gracia es que se le puede dar un número de attempts para re-intentar el envío. Esto está hecho porque existe un bug en el que si el bot está inactivo por un tiempo, el siguiente mensaje falla uwu.
+Para mandar un mensaje está creada la función `try_msg` en los `utils`, que es solamente un proxy de la función real ([`context.bot.send_message`](https://python-telegram-bot.readthedocs.io/en/stable/telegram.bot.html#telegram.Bot.send_message)) y su gracia es que se le puede dar un número de attempts para re-intentar el envío. Esto está hecho porque existe un bug en el que si el bot está inactivo por un tiempo, el siguiente mensaje falla uwu.
 
 El comando más simple es `tup`. Revisarlo para ver un ejemplo de cómo se hace.
 
