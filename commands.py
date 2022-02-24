@@ -28,6 +28,9 @@ def tup(update, context):
 def desiglar(update, context):
     log_command(update)
     arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
     message = data.acronyms.get(arg, "🤷")
     try_msg(context.bot,
             chat_id=update.message.chat_id,
@@ -38,6 +41,9 @@ def desiglar(update, context):
 def siglar(update, context):
     log_command(update)
     arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
     acronym = generate_acronym(arg)
 
     old_acronym = False
