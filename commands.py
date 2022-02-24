@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from functions import save_acronyms
 from utils import generate_acronym, get_arg, try_msg
 
 import data
@@ -38,6 +39,8 @@ def siglar(update, context):
     log_command(update)
     arg = get_arg(update)
     acronym = generate_acronym(arg)
+    data.acronyms[acronym] = arg
+    save_acronyms()
     try_msg(context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",

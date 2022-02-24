@@ -11,3 +11,7 @@ def load_acronyms():
         logger.info("Acronyms data loaded.")
     except OSError:
         logger.error("Acronyms data not found.")
+
+def save_acronyms():
+    with open("data/acronyms.json", "w", encoding="utf8") as acronyms_data:
+        json.dump(data.acronyms, acronyms_data, indent=4, ensure_ascii=False)
