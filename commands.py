@@ -39,12 +39,22 @@ def siglar(update, context):
     log_command(update)
     arg = get_arg(update)
     acronym = generate_acronym(arg)
+
+    old_acronym = False
+    if acronym in data.acronyms:
+        old_acronym = data.acronyms[acronym]
+
     data.acronyms[acronym] = arg
     save_acronyms()
+
+    message = acronym
+    if old_acronym:
+        message += f"\n<i>(Reemplaza '{old_acronym}')</i>"
+
     try_msg(context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
-            text=acronym)
+            text=message)
 
 
 # Admin Commands
