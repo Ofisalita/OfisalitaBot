@@ -9,3 +9,6 @@ venv/
 
 # Logs
 /log/
+
+# SQLite db
+*.sqlite3
