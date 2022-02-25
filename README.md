@@ -10,12 +10,14 @@ El comando más simple es `tup`. Revisarlo para ver un ejemplo de cómo se hace.
 ## Estructura
 - `config`
   - `auth.py`: Constantes relacionadas a la autenticación del bot y usuarios (e.g. token del bot, IDs de admins). No está en el repo **Y NO DEBERÍA ESTAR**, porque el token es privadest.
+  - `db.py`: Configuración relacionada a la base de datos.
   - `logger.py`: Configuración relacionada al logging del bot.
   - `persistence.py`: Configuración de la persistencia, i.e. cómo guardar la base de datos interna del bot (user_data, chats_data).
 - `data`
-  - `acronyms.json`: Data con las siglas guardadas.
+  - `db.sqlite3`: Ruta por defecto de la base de datos.
 - `main.py`: Carga la data necesaria, asigna los comandos disponibles e inicializa el polling del bot.
 - `commands.py`: Define las funciones que se ejecutan cuando se usa un comando de Telegram, asignados en `main.py`.
+- `data.py`: Define las funciones para interactuar con SQLite.
 - `bot.py`: Contiene el [Updater](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.updater.html) que controla el bot y variables relacionadas.
 - `functions.py`: Funciones auxiliares complejas y específicas de cierta funcionalidad. e.g. load/save de data, web querying, scrappers, etc.
 - `utils.py`: Funciones auxiliares genéricas abstraídas para facilitar sintáxis. e.g. manejo de strings, conversión de formatos, etc.
