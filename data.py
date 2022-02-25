@@ -41,6 +41,9 @@ class Acronyms:
 
     @ staticmethod
     def get(acronym):
+        """
+        Gets the definition of an acronym. Returns None if it doesn't exist.
+        """
         cur = connect().cursor()
         row = cur.execute(
             'SELECT definition FROM Acronyms WHERE acronym = ?', [acronym]).fetchone()
