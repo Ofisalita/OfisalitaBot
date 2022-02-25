@@ -1,6 +1,5 @@
 import os
 from datetime import datetime
-from functions import save_acronyms
 from utils import generate_acronym, get_arg, try_msg
 
 import data
@@ -31,7 +30,9 @@ def desiglar(update, context):
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    message = data.acronyms.get(arg, "🤷")
+    message = data.Acronyms.get(arg)
+    if message is None:
+        message = "🤷"
     try_msg(context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
@@ -46,15 +47,10 @@ def siglar(update, context):
 
     acronym = generate_acronym(arg)
 
-    old_acronym = False
-    if acronym in data.acronyms:
-        old_acronym = data.acronyms[acronym]
-
-    data.acronyms[acronym] = arg
-    save_acronyms()
+    old_acronym = data.Acronyms.set(acronym, arg)
 
     message = acronym
-    if old_acronym:
+    if old_acronym is not None:
         message += f"\n<i>(Reemplaza '{old_acronym}')</i>"
 
     try_msg(context.bot,
@@ -68,5 +64,6 @@ def siglar(update, context):
 def get_log(update, context):
     log_command(update)
     context.bot.send_document(chat_id=update.message.from_user.id,
-                              document=open(os.path.relpath('log/bot.log'), 'rb'),
+                              document=open(os.path.relpath(
+                                  'log/bot.log'), 'rb'),
                               filename=f"pasoapasobot_log_{datetime.now().strftime('%d%b%Y-%H%M%S')}.txt")
