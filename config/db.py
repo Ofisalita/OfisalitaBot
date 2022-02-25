@@ -1,1 +1,1 @@
-database_filename = 'db.sqlite3'
+db_file_path = 'data/db.sqlite3'

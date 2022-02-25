@@ -7,7 +7,7 @@ def init():
     """
     Connects to SQLite database and creates tables if they don't exist
     """
-    conn = sqlite3.connect(config.db.database_filename)
+    conn = sqlite3.connect(config.db.db_file_path)
     cur = conn.cursor()
     cur.execute(
         'CREATE TABLE IF NOT EXISTS Acronyms (acronym VARCHAR(255) PRIMARY KEY, definition VARCHAR(255) NOT NULL)')
@@ -18,7 +18,7 @@ def connect():
     """
     Connects to SQLite database and returns the connection
     """
-    return sqlite3.connect(config.db.database_filename)
+    return sqlite3.connect(config.db.db_file_path)
 
 
 class Acronyms:
