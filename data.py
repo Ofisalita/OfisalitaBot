@@ -1,8 +1,6 @@
-import sqlite3
-
 import sqlalchemy as sql
 from sqlalchemy.engine import Connection, Engine
-from sqlalchemy.orm import registry, declarative_base, Session
+from sqlalchemy.orm import registry, declarative_base, Session, session
 
 import config.db
 from config.logger import logger
@@ -27,9 +25,17 @@ class DataBaseDriver:
 
         self._engine = sql.create_engine(f"sqlite+pysqlite:///{config.db.db_file_path}", echo=True, future=True)
         Base.metadata.create_all(self._engine)
-        self.session = Session(self._engine)
 
         logger.info("SQLite initialized")
+
+    @property
+    def session(self) -> session:
+        """This creates and returns a session to connect to the database.
+
+        Use this only if necessary.
+        If this is used, the session should be manually closed.
+        """
+        return Session(self._engine)
 
 
 class Acronyms(Base):
