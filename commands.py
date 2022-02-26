@@ -72,7 +72,7 @@ def uwuspeech(update, context):
                     .replace('R', 'W')
                     .replace('L', 'W')
                     .replace('K', 'C')
-                    .replace('p', 'PW')
+                    .replace('P', 'PW')
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
