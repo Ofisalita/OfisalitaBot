@@ -90,6 +90,9 @@ def reverse_acronym(string: str) -> str:
     string_list = list(string)
     out = ""
     for initial in string_list:
-        out += random.choice(LETTER_DICTIONARY[initial])
+        if initial in LETTER_DICTIONARY:
+            out += random.choice(LETTER_DICTIONARY[initial])
+        else:
+            out += initial
         out += " "
     return out.lower().title()
