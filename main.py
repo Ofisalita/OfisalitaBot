@@ -5,9 +5,11 @@ import data
 from bot import updater, dp
 from commands import start, tup, desiglar, siglar, slashear, uwuspeech, get_log
 from config.auth import admin_ids
+from data import DataBaseDriver
 
 
 def main():
+    db = DataBaseDriver()
     data.init()
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('tup', tup))

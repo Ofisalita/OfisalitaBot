@@ -2,62 +2,41 @@ import sqlite3
 
 import sqlalchemy as sql
 from sqlalchemy.engine import Connection, Engine
+from sqlalchemy.orm import registry, declarative_base, Session
 
 import config.db
 from config.logger import logger
 
+Base = declarative_base()
 
-def init() -> None:
+
+class DataBaseDriver:
     """
-    Connects to SQLite database and creates tables if they don't exist
+    Basic driver for the bot database.
     """
-    engine: Engine = sql.create_engine(f"sqlite+pysqlite:///{config.db.db_file_path}", echo=True, future=True)
-    conn: Connection
-    with engine.connect() as conn:
-        conn.execute(sql.text("""
-            CREATE TABLE IF NOT EXISTS Acronyms (
-                acronym VARCHAR(255) PRIMARY KEY, 
-                definition VARCHAR(255) NOT NULL
-            )"""))
-        conn.commit()
-    logger.info("SQLite initialized")
+    _registry: registry
+    _engine: Engine
+    _conn: Connection
+    _metadata: sql.MetaData
 
-
-def connect() -> sqlite3.Connection:
-    """
-    Connects to SQLite database and returns the connection
-    """
-    return sqlite3.connect(config.db.db_file_path)
-
-
-class Acronyms:
-    @staticmethod
-    def set(acronym: str, definition: str) -> str | None:
+    def __init__(self) -> None:
         """
-        Updates/inserts acronym=definition and returns the old acronym or None.
+        Connects to SQLite database and creates tables if they don't exist
         """
-        conn = connect()
-        cur = conn.cursor()
-        old_acronym = Acronyms.get(acronym)
-        if old_acronym is not None:
-            cur.execute(
-                'UPDATE Acronyms SET definition = ? WHERE acronym = ?',
-                [definition, acronym])
-        else:
-            cur.execute('INSERT INTO Acronyms VALUES (?, ?)',
-                        [acronym, definition])
-        conn.commit()
-        return old_acronym
+        self._registry = registry()
 
-    @staticmethod
-    def get(acronym: str) -> str | None:
-        """
-        Gets the definition of an acronym. Returns None if it doesn't exist.
-        """
-        cur = connect().cursor()
-        row = cur.execute(
-            'SELECT definition FROM Acronyms WHERE acronym = ?',
-            [acronym]).fetchone()
-        if row is None:
-            return None
-        return row[0]
+        self._engine = sql.create_engine(f"sqlite+pysqlite:///{config.db.db_file_path}", echo=True, future=True)
+        Base.metadata.create_all(self._engine)
+        self.session = Session(self._engine)
+
+        logger.info("SQLite initialized")
+
+
+class Acronyms(Base):
+    __tablename__ = 'acronyms'
+
+    acronym = sql.Column(sql.String(255), primary_key=True)
+    definition = sql.Column(sql.String(255), nullable=False)
+
+    def __repr__(self):
+        return f"Acronyms(acronym={self.acronym!r}, definition={self.definition!r}"
