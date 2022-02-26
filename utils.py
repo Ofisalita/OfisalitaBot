@@ -1,3 +1,5 @@
+import re
+
 from telegram import Update, Bot, TelegramError, constants as tg_constants
 
 from config.logger import logger
@@ -61,10 +63,25 @@ def get_arg(update: Update) -> str:
 
 
 def generate_acronym(string: str) -> str:
-    string_list = string.split()
+
+    parentheses = (["(", "[", "{"], [")", "]", "}"])
+    bra, ket = '', ''
+
+    if string[0] in parentheses[0]:
+        bra = string[0]
+        bra_index = parentheses[0].index(bra)
+        ket = parentheses[1][bra_index]
+
+    delimiters = list(filter(None, ['*', ':', bra, ket]))
+    regex_pattern = fr"\s+|({'|'.join(map(re.escape, delimiters))})"
+
+    string_list = list(filter(None, re.split(regex_pattern, string)))
+
     out = ""
+
     for word in string_list:
         out += word[0]
         if word.find("?") > 0:
             out += "?"
+
     return out.lower()
