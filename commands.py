@@ -1,5 +1,9 @@
+import argparse
+from ast import arguments
+from distutils import text_file
 import os
 from datetime import datetime
+from typing import Text
 from utils import generate_acronym, get_arg, try_msg
 
 import data
@@ -30,7 +34,7 @@ def desiglar(update, context):
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    message = data.Acronyms.get(arg)
+    message = data.Acronyms.get(arg.lower())
     if message is None:
         message = "🤷"
     try_msg(context.bot,
@@ -57,6 +61,19 @@ def siglar(update, context):
             chat_id=update.message.chat_id,
             parse_mode="HTML",
             text=message)
+
+
+def slashear(update, context):
+    log_command(update)
+    if update.message.reply_to_message:
+        words = update.message.reply_to_message.text.split()
+        response = "/" + words[0].lower()
+        for word in words[1:]:
+            response += word.capitalize()
+        try_msg(context.bot,
+                chat_id=update.message.chat_id,
+                parse_mode="HTML",
+                text=response)
 
 
 def uwuspeech(update, context):
