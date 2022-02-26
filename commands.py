@@ -65,14 +65,14 @@ def uwuspeech(update, context):
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    message = arg.replace('r', 'w')
-                    .replace('l', 'w')
-                    .replace('k', 'c')
-                    .replace('p', 'pw')
-                    .replace('R', 'W')
-                    .replace('L', 'W')
-                    .replace('K', 'C')
-                    .replace('P', 'PW')
+    message = arg.replace('r', 'w') \
+    .replace('l', 'w') \
+    .replace('k', 'c') \
+    .replace('p', 'pw') \
+    .replace('R', 'W') \
+    .replace('L', 'W') \
+    .replace('K', 'C') \
+    .replace('P', 'PW')
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
