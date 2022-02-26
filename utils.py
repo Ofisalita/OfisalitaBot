@@ -16,9 +16,9 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
             bot.send_message(**params)
         except TelegramError as e:
             logger.error((
-                    f"[Attempt {attempt}/{attempts}] Messaging chat {chat_id} "
-                    f"raised following error: {type(e).__name__}: {e}"
-                )
+                f"[Attempt {attempt}/{attempts}] Messaging chat {chat_id} "
+                f"raised following error: {type(e).__name__}: {e}"
+            )
             )
         else:
             break
@@ -26,9 +26,9 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
 
     if attempt > attempts:
         logger.error((
-                f"Max attempts reached for chat {str(chat_id)}."
-                "Aborting message and raising exception."
-            )
+            f"Max attempts reached for chat {str(chat_id)}."
+            "Aborting message and raising exception."
+        )
         )
 
 
@@ -63,6 +63,19 @@ def get_arg(update: Update) -> str:
 
 
 def generate_acronym(string: str) -> str:
+    """
+    Generates a lowercase acronym of the input string.
+
+    Examples:
+        >>>generate_acronym("qué querís que te diga")
+        qqqtd
+        >>>generate_acronym("*se resbala y se cambia a movistar*")
+        *sryscam*
+        >>>generate_acronym(":j_____:")
+        :j:
+        >>>generate_acronym("(broma pero si quieres no es broma)")
+        (bpsqneb)
+    """
 
     parentheses = (["(", "[", "{"], [")", "]", "}"])
     bra, ket = '', ''
