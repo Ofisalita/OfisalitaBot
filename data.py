@@ -1,5 +1,9 @@
-import config.db
 import sqlite3
+
+import sqlalchemy as sql
+from sqlalchemy.engine import Connection, Engine
+
+import config.db
 from config.logger import logger
 
 
@@ -7,11 +11,15 @@ def init() -> None:
     """
     Connects to SQLite database and creates tables if they don't exist
     """
-    conn = sqlite3.connect(config.db.db_file_path)
-    cur = conn.cursor()
-    cur.execute(
-        'CREATE TABLE IF NOT EXISTS Acronyms (acronym VARCHAR(255) PRIMARY KEY, \
-        definition VARCHAR(255) NOT NULL)')
+    engine: Engine = sql.create_engine(f"sqlite+pysqlite:///{config.db.db_file_path}", echo=True, future=True)
+    conn: Connection
+    with engine.connect() as conn:
+        conn.execute(sql.text("""
+            CREATE TABLE IF NOT EXISTS Acronyms (
+                acronym VARCHAR(255) PRIMARY KEY, 
+                definition VARCHAR(255) NOT NULL
+            )"""))
+        conn.commit()
     logger.info("SQLite initialized")
 
 
@@ -23,7 +31,7 @@ def connect() -> sqlite3.Connection:
 
 
 class Acronyms:
-    @ staticmethod
+    @staticmethod
     def set(acronym: str, definition: str) -> str | None:
         """
         Updates/inserts acronym=definition and returns the old acronym or None.
@@ -41,7 +49,7 @@ class Acronyms:
         conn.commit()
         return old_acronym
 
-    @ staticmethod
+    @staticmethod
     def get(acronym: str) -> str | None:
         """
         Gets the definition of an acronym. Returns None if it doesn't exist.
