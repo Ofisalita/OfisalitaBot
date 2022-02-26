@@ -46,3 +46,4 @@ class Acronyms(Base):
 
     def __repr__(self):
         return f"Acronyms(acronym={self.acronym!r}, definition={self.definition!r}"
+
