@@ -34,7 +34,7 @@ def desiglar(update, context):
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    message = data.Acronyms.get(arg)
+    message = data.Acronyms.get(arg.lower())
     if message is None:
         message = "🤷"
     try_msg(context.bot,
