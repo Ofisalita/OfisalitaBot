@@ -1,11 +1,8 @@
-import re
-
 import random
-
-from telegram import Update, Bot, TelegramError, constants as tg_constants
-
+import re
 from config.logger import logger
 from string import ascii_lowercase
+from telegram import Update, Bot, TelegramError, constants as tg_constants
 
 word_file = "static/words.txt"
 WORDS = open(word_file).read().splitlines()
