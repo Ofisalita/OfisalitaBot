@@ -1,10 +1,8 @@
-from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
 from telegram import Update
 from telegram.ext import CallbackContext, Dispatcher, CommandHandler
 
 import data
-from commands import log_command, Commands
+from commands import Commands, log_command
 from handlers.common import OfisalitaHandler
 from utils import get_arg, try_msg, generate_acronym
 
@@ -25,12 +23,9 @@ class AcronymHandler(OfisalitaHandler):
         if update.message.reply_to_message and not arg:
             arg = update.message.reply_to_message.text
 
-        with self.db.session as session:
-            try:
-                acronym = session.execute(select(data.Acronyms).filter_by(acronym=arg.lower())).scalar_one()
-                message = acronym.definition
-            except NoResultFound:
-                message = "🤷"
+        acronym = self.db.get_acronym(arg.lower())
+        message = acronym if acronym is not None else "🤷"
+
         try_msg(context.bot,
                 chat_id=update.message.chat_id,
                 parse_mode="HTML",
@@ -46,8 +41,7 @@ class AcronymHandler(OfisalitaHandler):
             arg = update.message.reply_to_message.text
 
         acronym = generate_acronym(arg)
-
-        old_acronym = data.Acronyms.set(acronym, arg)
+        old_acronym = self.db.insert_acronym(acronym, arg)
 
         message = acronym
         if old_acronym is not None:

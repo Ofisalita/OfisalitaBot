@@ -36,3 +36,4 @@ class OfisalitaBot:
     def run(self):
         logger.info("Starting bot polling service.")
         self.updater.start_polling()
+        self.updater.idle()
