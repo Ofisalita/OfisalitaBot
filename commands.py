@@ -1,8 +1,6 @@
-import argparse
-from ast import arguments
-from distutils import text_file
 import os
 from datetime import datetime
+
 from telegram import Update
 from telegram.ext import CallbackContext
 from typing import Text
@@ -10,6 +8,7 @@ from utils import generate_acronym, get_arg, reverse_acronym, try_msg
 
 import data
 from config.logger import log_command
+from utils import generate_acronym, get_arg, try_msg
 
 
 def start(update: Update, context: CallbackContext) -> None:
