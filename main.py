@@ -1,6 +1,7 @@
 # noinspection PyPackageRequirements
 from telegram.ext import CommandHandler, Filters
 
+import data
 from bot import OfisalitaBot
 # from commands import desiglar, siglar, slashear, uwuspeech, get_log
 from config.auth import admin_ids

@@ -1,9 +1,8 @@
 import random
-
-from telegram import Update, Bot, TelegramError, constants as tg_constants
-
+import re
 from config.logger import logger
 from string import ascii_lowercase
+from telegram import Update, Bot, TelegramError, constants as tg_constants
 
 word_file = "static/words.txt"
 WORDS = open(word_file).read().splitlines()
@@ -24,9 +23,9 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
             bot.send_message(**params)
         except TelegramError as e:
             logger.error((
-                    f"[Attempt {attempt}/{attempts}] Messaging chat {chat_id} "
-                    f"raised following error: {type(e).__name__}: {e}"
-                )
+                f"[Attempt {attempt}/{attempts}] Messaging chat {chat_id} "
+                f"raised following error: {type(e).__name__}: {e}"
+            )
             )
         else:
             break
@@ -34,9 +33,9 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
 
     if attempt > attempts:
         logger.error((
-                f"Max attempts reached for chat {str(chat_id)}."
-                "Aborting message and raising exception."
-            )
+            f"Max attempts reached for chat {str(chat_id)}."
+            "Aborting message and raising exception."
+        )
         )
 
 
@@ -72,14 +71,39 @@ def get_arg(update: Update) -> str:
 
 def generate_acronym(string: str) -> str:
     """
-    Makes an acronym from a phrase
+    Generates a lowercase acronym of the input string.
+
+    Examples:
+        >>>generate_acronym("qué querís que te diga")
+        qqqtd
+        >>>generate_acronym("*se resbala y se cambia a movistar*")
+        *sryscam*
+        >>>generate_acronym(":j_____:")
+        :j:
+        >>>generate_acronym("(broma pero si quieres no es broma)")
+        (bpsqneb)
     """
-    string_list = string.split()
+
+    parentheses = (["(", "[", "{"], [")", "]", "}"])
+    bra, ket = '', ''
+
+    if string[0] in parentheses[0]:
+        bra = string[0]
+        bra_index = parentheses[0].index(bra)
+        ket = parentheses[1][bra_index]
+
+    delimiters = list(filter(None, ['*', ':', bra, ket]))
+    regex_pattern = fr"\s+|({'|'.join(map(re.escape, delimiters))})"
+
+    string_list = list(filter(None, re.split(regex_pattern, string)))
+
     out = ""
+
     for word in string_list:
         out += word[0]
         if word.find("?") > 0:
             out += "?"
+
     return out.lower()
 
 
