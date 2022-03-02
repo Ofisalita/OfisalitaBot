@@ -15,9 +15,12 @@ def main():
     dp.add_handler(CommandHandler('siglar', siglar))
     dp.add_handler(CommandHandler('slashear', slashear))
     dp.add_handler(CommandHandler('uwuspeech', uwuspeech))
+    dp.add_handler(CommandHandler('uwuspeak', uwuspeech))
+    dp.add_handler(CommandHandler('uwuizar', uwuspeech))
+    dp.add_handler(CommandHandler('uwu', uwuspeech))
     # Admin commands
     dp.add_handler(CommandHandler('get_log', get_log,
-                   filters=Filters.user(admin_ids)))
+                                  filters=Filters.user(admin_ids)))
 
     updater.start_polling()
     updater.idle()
