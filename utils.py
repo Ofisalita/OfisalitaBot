@@ -39,6 +39,36 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
         )
 
 
+def try_edit(bot: Bot, attempts: int = 2, **params) -> None:
+    """
+    Make multiple attempts to edit a message.
+    """
+    chat_id = params["chat_id"]
+    message_id = params["message_id"]
+    attempt = 1
+    while attempt <= attempts:
+        try:
+            bot.edit_message_text(**params)
+        except TelegramError as e:
+            logger.error((
+                f"[Attempt {attempt}/{attempts}] "
+                f"Editing message {message_id} "
+                f"in chat {chat_id} "
+                f"raised following error: {type(e).__name__}: {e}"
+            )
+            )
+        else:
+            break
+        attempt += 1
+
+    if attempt > attempts:
+        logger.error((
+            f"Max attempts reached for chat {str(chat_id)}."
+            "Aborting edit and raising exception."
+        )
+        )
+
+
 def send_long_message(bot: Bot, **params) -> None:
     """
     Recursively breaks long texts into multiple messages,
