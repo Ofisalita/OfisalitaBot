@@ -154,7 +154,7 @@ def agregar(update: Update, context: CallbackContext) -> None:
 
     content = update.message.reply_to_message.text
 
-    if not content.startswith("#list"):
+    if not content.startswith("#LISTA"):
         return
 
     lines = content.split("\n")
@@ -185,7 +185,7 @@ def quitar(update: Update, context: CallbackContext) -> None:
 
     content = update.message.reply_to_message.text
 
-    if not content.startswith("#list"):
+    if not content.startswith("#LISTA"):
         return
 
     number = int(get_arg(update))
