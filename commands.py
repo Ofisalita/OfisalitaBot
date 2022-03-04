@@ -113,7 +113,7 @@ def uwuspeech(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
-def repeat(update: Update, context: CallbackContext) -> None:
+def repetir(update: Update, context: CallbackContext) -> None:
     """
     Repeats a given message
     """
@@ -128,13 +128,13 @@ def repeat(update: Update, context: CallbackContext) -> None:
             text=arg)
 
 
-def startlist(update: Update, context: CallbackContext) -> None:
+def lista(update: Update, context: CallbackContext) -> None:
     """
     Starts an editable list
     """
     log_command(update)
     arg = get_arg(update)
-    message = f"#list {arg}:"
+    message = f"#LISTA {arg}:"
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
@@ -142,7 +142,7 @@ def startlist(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
-def add(update: Update, context: CallbackContext) -> None:
+def agregar(update: Update, context: CallbackContext) -> None:
     """
     Adds an item to a list
     """
@@ -173,7 +173,7 @@ def add(update: Update, context: CallbackContext) -> None:
     )
 
 
-def remove(update: Update, context: CallbackContext) -> None:
+def quitar(update: Update, context: CallbackContext) -> None:
     """
     Removes an item from a list
     """
