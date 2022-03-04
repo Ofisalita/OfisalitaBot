@@ -2,7 +2,8 @@ from telegram.ext import CommandHandler, Filters
 
 import data
 from bot import updater, dp
-from commands import start, tup, desiglar, siglar, slashear, uwuspeech, get_log
+from commands import start, tup, desiglar, siglar, slashear, uwuspeech, \
+                        repeat, startlist, add, remove, get_log
 from config.auth import admin_ids
 
 
@@ -18,6 +19,12 @@ def main():
     dp.add_handler(CommandHandler('uwuspeak', uwuspeech))
     dp.add_handler(CommandHandler('uwuizar', uwuspeech))
     dp.add_handler(CommandHandler('uwu', uwuspeech))
+
+    dp.add_handler(CommandHandler('repeat', repeat))
+    dp.add_handler(CommandHandler('startlist', startlist))
+    dp.add_handler(CommandHandler('add', add))
+    dp.add_handler(CommandHandler('remove', remove))
+
     # Admin commands
     dp.add_handler(CommandHandler('get_log', get_log,
                                   filters=Filters.user(admin_ids)))

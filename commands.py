@@ -3,12 +3,10 @@ from datetime import datetime
 
 from telegram import Update
 from telegram.ext import CallbackContext
-from typing import Text
-from utils import generate_acronym, get_arg, reverse_acronym, try_msg
+from utils import generate_acronym, get_arg, reverse_acronym, try_msg, try_edit
 
 import data
 from config.logger import log_command
-from utils import generate_acronym, get_arg, try_msg
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -115,7 +113,113 @@ def uwuspeech(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+def repeat(update: Update, context: CallbackContext) -> None:
+    """
+    Repeats a given message
+    """
+    log_command(update)
+    arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=arg)
+
+
+def startlist(update: Update, context: CallbackContext) -> None:
+    """
+    Starts an editable list
+    """
+    log_command(update)
+    arg = get_arg(update)
+    message = f"#list {arg}:"
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
+
+
+def add(update: Update, context: CallbackContext) -> None:
+    """
+    Adds an item to a list
+    """
+    if not update.message.reply_to_message:
+        return
+
+    if context.bot.id != update.message.reply_to_message.from_user.id:
+        return
+
+    content = update.message.reply_to_message.text
+
+    if not content.startswith("#list"):
+        return
+
+    lines = content.split("\n")
+    lines_count = len(lines)
+
+    addition = get_arg(update).replace("\n", " ")
+
+    new_message = content + f"\n{lines_count}- " + addition
+
+    try_edit(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        message_id=update.message.reply_to_message.message_id,
+        text=new_message
+    )
+
+
+def remove(update: Update, context: CallbackContext) -> None:
+    """
+    Removes an item from a list
+    """
+    if not update.message.reply_to_message:
+        return
+
+    if context.bot.id != update.message.reply_to_message.from_user.id:
+        return
+
+    content = update.message.reply_to_message.text
+
+    if not content.startswith("#list"):
+        return
+
+    number = int(get_arg(update))
+    number_dash = str(number) + "-"
+
+    lines = content.split("\n")
+    new_lines = []
+
+    found_target = False
+    for line in lines:
+        if found_target:
+            split_line = line.split("- ")
+            number = str(int(split_line[0]) - 1)
+            split_line[0] = number
+            new_lines.append('- '.join(split_line))
+        else:
+            if line.startswith(number_dash):
+                found_target = True
+            else:
+                new_lines.append(line)
+
+    new_message = '\n'.join(new_lines)
+
+    try_edit(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        message_id=update.message.reply_to_message.message_id,
+        text=new_message
+    )
+
+
 # Admin Commands
+
 
 def get_log(update: Update, context: CallbackContext) -> None:
     """
