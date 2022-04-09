@@ -3,7 +3,8 @@ from datetime import datetime
 
 from telegram import Update
 from telegram.ext import CallbackContext
-from utils import generate_acronym, get_arg, reverse_acronym, try_msg, try_edit
+from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
+                  try_edit, guard_editable_bot_message
 
 import data
 from config.logger import log_command
@@ -128,13 +129,17 @@ def repetir(update: Update, context: CallbackContext) -> None:
             text=arg)
 
 
+# --- Comandos de Listas ---
+LIST_HASHTAG = "#LISTA"
+
+
 def lista(update: Update, context: CallbackContext) -> None:
     """
     Starts an editable list
     """
     log_command(update)
     arg = get_arg(update)
-    message = f"#LISTA {arg}:"
+    message = f"{LIST_HASHTAG} {arg}:"
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
@@ -146,17 +151,10 @@ def agregar(update: Update, context: CallbackContext) -> None:
     """
     Adds an item to a list
     """
-    if not update.message.reply_to_message:
-        return
-
-    if context.bot.id != update.message.reply_to_message.from_user.id:
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
         return
 
     content = update.message.reply_to_message.text
-
-    if not content.startswith("#LISTA"):
-        return
-
     lines = content.split("\n")
     lines_count = len(lines)
 
@@ -177,16 +175,10 @@ def quitar(update: Update, context: CallbackContext) -> None:
     """
     Removes an item from a list
     """
-    if not update.message.reply_to_message:
-        return
-
-    if context.bot.id != update.message.reply_to_message.from_user.id:
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
         return
 
     content = update.message.reply_to_message.text
-
-    if not content.startswith("#LISTA"):
-        return
 
     number = int(get_arg(update))
     number_dash = str(number) + "-"
@@ -216,6 +208,8 @@ def quitar(update: Update, context: CallbackContext) -> None:
         message_id=update.message.reply_to_message.message_id,
         text=new_message
     )
+
+# --- End of List Commands ---
 
 
 # Admin Commands
