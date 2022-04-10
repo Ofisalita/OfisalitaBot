@@ -3,6 +3,7 @@ import re
 from config.logger import logger
 from string import ascii_lowercase
 from telegram import Update, Bot, TelegramError, constants as tg_constants
+from telegram.ext import CallbackContext
 
 word_file = "static/words.txt"
 WORDS = open(word_file).read().splitlines()
@@ -150,3 +151,60 @@ def reverse_acronym(string: str) -> str:
             out += initial
         out += " "
     return out.lower().title()
+
+
+def guard_reply_to_message(update: Update) -> bool:
+    """
+    Guard statement:
+    Verifies if a message is a reply.
+    To be used in conjunction with a return.
+    False if the code should keep running.
+    True if the code should stop running.
+    """
+    return not update.message.reply_to_message
+
+
+def guard_reply_to_bot_message(update: Update,
+                               context: CallbackContext) -> bool:
+    """
+    Guard statement:
+    Verifies if a reply is replying to a message from the actual bot.
+    To be used in conjunction with a return.
+    False if the code should keep running.
+    True if the code should stop running.
+    """
+    return context.bot.id != update.message.reply_to_message.from_user.id
+
+
+def guard_hashtag(content: str, match: str) -> bool:
+    """
+    Guard statement:
+    Verifies if a reply is replying to a message from the actual bot.
+    To be used in conjunction with a return.
+    False if the code should keep running.
+    True if the code should stop running.
+    """
+    return not content.startswith(match)
+
+
+def guard_editable_bot_message(update: Update,
+                               context: CallbackContext,
+                               match: str) -> bool:
+    """
+    Guard statement:
+    Verifies if a reply is replying to a message from the actual bot that
+    begins with a specific hashtag.
+    To be used in conjunction with a return.
+    False if the code should keep running.
+    True if the code should stop running.
+    """
+    if guard_reply_to_message(update):
+        return True
+
+    if guard_reply_to_bot_message(update, context):
+        return True
+
+    if guard_hashtag(update.message.reply_to_message.text, match):
+        return True
+
+    return False

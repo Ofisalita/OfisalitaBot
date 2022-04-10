@@ -3,7 +3,8 @@ from datetime import datetime
 
 from telegram import Update
 from telegram.ext import CallbackContext
-from utils import generate_acronym, get_arg, reverse_acronym, try_msg, try_edit
+from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
+                  try_edit, guard_editable_bot_message
 
 import data
 from config.logger import log_command
@@ -128,13 +129,17 @@ def repetir(update: Update, context: CallbackContext) -> None:
             text=arg)
 
 
+# --- List Commands ---
+LIST_HASHTAG = "#LISTA"
+
+
 def lista(update: Update, context: CallbackContext) -> None:
     """
     Starts an editable list
     """
     log_command(update)
     arg = get_arg(update)
-    message = f"#LISTA {arg}:"
+    message = f"{LIST_HASHTAG} {arg}:"
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
@@ -146,17 +151,10 @@ def agregar(update: Update, context: CallbackContext) -> None:
     """
     Adds an item to a list
     """
-    if not update.message.reply_to_message:
-        return
-
-    if context.bot.id != update.message.reply_to_message.from_user.id:
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
         return
 
     content = update.message.reply_to_message.text
-
-    if not content.startswith("#LISTA"):
-        return
-
     lines = content.split("\n")
     lines_count = len(lines)
 
@@ -177,16 +175,10 @@ def quitar(update: Update, context: CallbackContext) -> None:
     """
     Removes an item from a list
     """
-    if not update.message.reply_to_message:
-        return
-
-    if context.bot.id != update.message.reply_to_message.from_user.id:
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
         return
 
     content = update.message.reply_to_message.text
-
-    if not content.startswith("#LISTA"):
-        return
 
     number = int(get_arg(update))
     number_dash = str(number) + "-"
@@ -217,6 +209,67 @@ def quitar(update: Update, context: CallbackContext) -> None:
         text=new_message
     )
 
+# --- End of List Commands ---
+
+
+# --- Counter Commands ---
+COUNTER_HASHTAG = "#CONTADOR"
+
+
+def contador(update: Update, context: CallbackContext) -> None:
+    """
+    Starts an editable counter
+    """
+    log_command(update)
+    arg = get_arg(update).replace("\n", " ")
+    message = f"{COUNTER_HASHTAG} {arg}:\n0"
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
+
+
+def sumar(update: Update, context: CallbackContext, sign: int = 1) -> None:
+    """
+    Adds a number to a counter (default 1)
+    """
+    if guard_editable_bot_message(update, context, COUNTER_HASHTAG):
+        return
+
+    content = update.message.reply_to_message.text
+    lines = content.split("\n")
+
+    previous_number = int(lines[-1])
+
+    argument = get_arg(update)
+    if not argument:
+        addition = 1
+    else:
+        addition = int(get_arg(update))
+
+    addition *= sign
+
+    lines[-1] = previous_number + addition
+
+    new_message = "\n".join([str(item) for item in lines])
+
+    try_edit(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        message_id=update.message.reply_to_message.message_id,
+        text=new_message
+    )
+
+
+def restar(update: Update, context: CallbackContext) -> None:
+    """
+    Subtracts a number to a counter (default 1)
+    """
+    sumar(update, context, -1)
+
+# --- End of Counter Commands
 
 # Admin Commands
 
