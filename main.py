@@ -26,6 +26,7 @@ def main():
     dp.add_handler(CommandHandler('agregar', agregar))
     dp.add_handler(CommandHandler('quitar', quitar))
     dp.add_handler(CommandHandler('deslistar', deslistar))
+    dp.add_handler(CommandHandler('cerrar', deslistar))
 
     dp.add_handler(CommandHandler('contador', contador))
     dp.add_handler(CommandHandler('sumar', sumar))
