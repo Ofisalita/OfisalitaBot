@@ -218,6 +218,58 @@ def quitar(update: Update, context: CallbackContext) -> None:
     )
 
 
+def editar(update: Update, context: CallbackContext) -> None:
+    """
+    Edits an item from a list
+    """
+
+    # You should be replying to the list for this to work
+    if not update.message.reply_to_message:
+        return
+
+    # Check if the list replied to is from the bot
+    if context.bot.id != update.message.reply_to_message.from_user.id:
+        return
+
+    # Check if the list is a list
+    content = update.message.reply_to_message.text
+    if not content.startswith("#LISTA"):
+        return
+
+    args = get_arg(update)
+    try:
+        number = int(args[:args.find(" ")])
+    # If the user didn't specify a number, then the command is invalid
+    except ValueError:
+        return
+
+    new_content = args[args.find(" ") + 1:]
+    lines = content.split("\n")
+
+    # if the number is 0 edit the title
+    if number == 0:
+        lines[0] = f"#LISTA {new_content}:"
+    # if the number is an item from the list, edit it
+    elif number in range(1, len(lines) + 1):
+        lines[number] = f"{number}- {new_content}"
+    # if the number is out of range or any other border case, just ignore it
+    else:
+        return
+
+    new_message = '\n'.join(lines)
+
+    if new_message == content:
+        return
+
+    try_edit(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        message_id=update.message.reply_to_message.message_id,
+        text=new_message
+    )
+
+
 # Admin Commands
 
 
