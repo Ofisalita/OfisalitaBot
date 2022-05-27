@@ -218,8 +218,6 @@ def deslistar(update: Update, context: CallbackContext) -> None:
         return
 
     content = update.message.reply_to_message.text
-
-    # Separate just the title and rebuild the message without the hashtag
     new_message = content[1:]
 
     try_edit(
