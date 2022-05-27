@@ -209,6 +209,30 @@ def quitar(update: Update, context: CallbackContext) -> None:
         text=new_message
     )
 
+
+def deslistar(update: Update, context: CallbackContext) -> None:
+    """
+    Cierra una lista
+    """
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
+        return
+
+    content = update.message.reply_to_message.text
+
+    # Separate just the title and rebuild the message without the hashtag
+    title = content[content.find(LIST_HASHTAG[-1]) + 2: content.find("\n") - 1]
+    list_content = content[content.find("\n") + 1:]
+    new_title = f"LISTA {title}:"
+    new_message = new_title + "\n" + list_content
+
+    try_edit(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        message_id=update.message.reply_to_message.message_id,
+        text=new_message
+    )
+
 # --- End of List Commands ---
 
 
