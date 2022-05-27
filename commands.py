@@ -220,10 +220,7 @@ def deslistar(update: Update, context: CallbackContext) -> None:
     content = update.message.reply_to_message.text
 
     # Separate just the title and rebuild the message without the hashtag
-    title = content[content.find(LIST_HASHTAG[-1]) + 2: content.find("\n") - 1]
-    list_content = content[content.find("\n") + 1:]
-    new_title = f"LISTA {title}:"
-    new_message = new_title + "\n" + list_content
+    new_message = content[1:]
 
     try_edit(
         context.bot,
