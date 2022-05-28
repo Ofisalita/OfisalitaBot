@@ -214,21 +214,13 @@ def editar(update: Update, context: CallbackContext) -> None:
     """
     Edits an item from a list
     """
-
-    # You should be replying to the list for this to work
-    if not update.message.reply_to_message:
+    log_command(update)
+    if guard_editable_bot_message(update, context, LIST_HASHTAG):
         return
 
-    # Check if the list replied to is from the bot
-    if context.bot.id != update.message.reply_to_message.from_user.id:
-        return
-
-    # Check if the list is a list
     content = update.message.reply_to_message.text
-    if not content.startswith("#LISTA"):
-        return
-
     args = get_arg(update)
+
     try:
         number = int(args[:args.find(" ")])
     # If the user didn't specify a number, then the command is invalid
@@ -240,7 +232,7 @@ def editar(update: Update, context: CallbackContext) -> None:
 
     # if the number is 0 edit the title
     if number == 0:
-        lines[0] = f"#LISTA {new_content}:"
+        lines[0] = f"{LIST_HASHTAG} {new_content}:"
     # if the number is an item from the list, edit it
     elif number in range(1, len(lines) + 1):
         lines[number] = f"{number}- {new_content}"
