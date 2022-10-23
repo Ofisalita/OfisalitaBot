@@ -3,11 +3,11 @@ from datetime import datetime
 
 from telegram import Update
 from telegram.ext import CallbackContext
-from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
-                  try_edit, guard_editable_bot_message
 
 import data
 from config.logger import log_command
+from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
+    try_edit, guard_editable_bot_message
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -45,7 +45,7 @@ def desiglar(update: Update, context: CallbackContext) -> None:
 
     message = data.Acronyms.get(arg.lower())
     if message is None:
-        message = reverse_acronym(arg)
+        message = reverse_acronym(arg.lower())
         message += "\n<i>Para hacer una sigla real:</i> /siglar"
 
     try_msg(context.bot,
