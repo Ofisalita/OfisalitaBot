@@ -34,49 +34,6 @@ def tup(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
-def desiglar(update: Update, context: CallbackContext) -> None:
-    """
-    Turns an acronym into its corresponding phrase
-    """
-    log_command(update)
-    arg = get_arg(update)
-    if update.message.reply_to_message and not arg:
-        arg = update.message.reply_to_message.text
-
-    message = data.Acronyms.get(arg.lower())
-    if message is None:
-        message = reverse_acronym(arg.lower())
-        message += "\n<i>Para hacer una sigla real:</i> /siglar"
-
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=message)
-
-
-def siglar(update: Update, context: CallbackContext) -> None:
-    """
-    Saves a phrase as an acronym
-    """
-    log_command(update)
-    arg = get_arg(update)
-    if update.message.reply_to_message and not arg:
-        arg = update.message.reply_to_message.text
-
-    acronym = generate_acronym(arg)
-
-    old_acronym = data.Acronyms.set(acronym, arg)
-
-    message = acronym
-    if old_acronym is not None:
-        message += f"\n<i>(Reemplaza '{old_acronym}')</i>"
-
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=message)
-
-
 def slashear(update, context):
     log_command(update)
     if update.message.reply_to_message:
@@ -127,6 +84,51 @@ def repetir(update: Update, context: CallbackContext) -> None:
             chat_id=update.message.chat_id,
             parse_mode="HTML",
             text=arg)
+
+# --- Acronym Commands ---
+
+
+def desiglar(update: Update, context: CallbackContext) -> None:
+    """
+    Turns an acronym into its corresponding phrase
+    """
+    log_command(update)
+    arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
+    message = data.Acronyms.get(arg.lower())
+    if message is None:
+        message = reverse_acronym(arg.lower())
+        message += "\n<i>Para hacer una sigla real:</i> /siglar"
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
+
+
+def siglar(update: Update, context: CallbackContext) -> None:
+    """
+    Saves a phrase as an acronym
+    """
+    log_command(update)
+    arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
+    acronym = generate_acronym(arg)
+
+    old_acronym = data.Acronyms.set(acronym, arg)
+
+    message = acronym
+    if old_acronym is not None:
+        message += f"\n<i>(Reemplaza '{old_acronym}')</i>"
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
 
 
 # --- List Commands ---
