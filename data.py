@@ -1,5 +1,4 @@
 import sqlite3
-from typing import Optional
 
 import config.db
 from config.logger import logger
@@ -55,3 +54,20 @@ class Acronyms:
         if row is None:
             return None
         return row[0]
+
+    @staticmethod
+    def list_all() -> list[tuple[str, str]]:
+        """Lists all acronym definitions."""
+        cur = connect().cursor()
+        rows = cur.execute('SELECT * FROM Acronyms').fetchall()
+        return rows
+
+    @staticmethod
+    def list_by_letter(let: str) -> list[tuple[str, str]]:
+        """Lists all acronyms starting with a certain letter, and
+         their definitions."""
+        cur = connect().cursor()
+        rows = cur.execute(
+            f"SELECT * FROM Acronyms WHERE (acronym LIKE '{let}%')"
+        ).fetchall()
+        return rows
