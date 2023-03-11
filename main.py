@@ -3,8 +3,8 @@ from telegram.ext import CommandHandler, Filters
 import data
 from bot import updater, dp
 from commands import start, tup, desiglar, siglar, slashear, uwuspeech, \
-                        repetir, lista, agregar, quitar, editar, deslistar, \
-                        get_log, contador, sumar, restar
+    repetir, lista, agregar, quitar, editar, deslistar, \
+    get_log, contador, sumar, restar, gracias
 from config.auth import admin_ids
 
 
@@ -13,6 +13,7 @@ def main():
 
     dp.add_handler(CommandHandler('start', start))
     dp.add_handler(CommandHandler('tup', tup))
+    dp.add_handler(CommandHandler('gracias', gracias))
     dp.add_handler(CommandHandler('desiglar', desiglar))
     dp.add_handler(CommandHandler('siglar', siglar))
     dp.add_handler(CommandHandler('slashear', slashear))
