@@ -4,7 +4,7 @@ import data
 from bot import updater, dp
 from commands import start, tup, desiglar, siglar, slashear, uwuspeech, \
     repetir, lista, agregar, quitar, editar, deslistar, \
-    get_log, contador, sumar, restar, glosario
+    get_log, contador, sumar, restar, glosario, gracias
 from config.auth import admin_ids
 
 
@@ -12,7 +12,9 @@ def main():
     data.init()
 
     dp.add_handler(CommandHandler('start', start))
-
+    dp.add_handler(CommandHandler('tup', tup))
+    dp.add_handler(CommandHandler('gracias', gracias))
+    
     # ==== SIGLAS ====
     dp.add_handler(CommandHandler('desiglar', desiglar))
     dp.add_handler(CommandHandler('siglar', siglar))

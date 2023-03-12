@@ -8,7 +8,7 @@ from telegram.utils.helpers import escape_markdown
 import data
 from config.logger import log_command
 from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
-    try_edit, guard_editable_bot_message, member_check
+    try_edit, guard_editable_bot_message, member_check, try_sticker
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -46,6 +46,18 @@ def slashear(update, context):
                 chat_id=update.message.chat_id,
                 parse_mode="HTML",
                 text=response)
+              
+              
+def gracias(update: Update, context: CallbackContext) -> None:
+    """
+    Responds with a sticker saying "you're welcome!"
+    """
+    log_command(update)
+
+    try_sticker(context.bot,
+                chat_id=update.message.chat_id,
+                sticker="CAACAgEAAxkBAAEIGOFkDPttpRc6CvU2knm"
+                        "-GXAwP8inxgAC3AEAAqnzSUfg84mzRL-JRS8E")
 
 
 def uwuspeech(update: Update, context: CallbackContext) -> None:

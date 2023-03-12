@@ -73,6 +73,33 @@ def try_edit(bot: Bot, attempts: int = 2, **params) -> None:
         )
 
 
+def try_sticker(bot: Bot, attempts: int = 2, **params) -> None:
+    """
+    Make multiple attempts to send a sticker.
+    """
+    chat_id = params["chat_id"]
+    attempt = 1
+    while attempt <= attempts:
+        try:
+            bot.send_sticker(**params)
+        except TelegramError as e:
+            logger.error((
+                f"[Attempt {attempt}/{attempts}] Stickering chat {chat_id} "
+                f"raised following error: {type(e).__name__}: {e}"
+            )
+            )
+        else:
+            break
+        attempt += 1
+
+    if attempt > attempts:
+        logger.error((
+            f"Max attempts reached for chat {str(chat_id)}."
+            "Aborting message and raising exception."
+        )
+        )
+
+
 def send_long_message(bot: Bot, **params) -> None:
     """
     Recursively breaks long texts into multiple messages,
