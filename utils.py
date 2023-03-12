@@ -5,6 +5,7 @@ from string import ascii_lowercase
 from telegram import Update, Bot, TelegramError, constants as tg_constants
 from telegram.ext import CallbackContext
 
+from config.auth import group_id
 from config.logger import logger
 
 word_file = "static/words.txt"
@@ -237,3 +238,19 @@ def guard_editable_bot_message(update: Update,
         return True
 
     return False
+
+
+def member_check(update: Update, context: CallbackContext) -> bool:
+    """If the update was not sent by a member of the group configured in
+    auth.py, sends a "forbidden" message.
+    Returns whether the user is member of the group."""
+    chat_member = context.bot.getChatMember(group_id,
+                                            update.message.from_user.id)
+
+    if chat_member.status not in ["administrator", "creator", "member"]:
+        try_msg(context.bot,
+                chat_id=update.message.chat_id,
+                parse_mode="HTML",
+                text="<b>403 FORBIDDEN</b>")
+        return False
+    return True

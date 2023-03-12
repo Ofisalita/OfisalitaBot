@@ -1,13 +1,14 @@
 import os
 from datetime import datetime
 
-from telegram import Update
+from telegram import Update, ParseMode, constants
 from telegram.ext import CallbackContext
+from telegram.utils.helpers import escape_markdown
 
 import data
 from config.logger import log_command
 from utils import generate_acronym, get_arg, reverse_acronym, try_msg, \
-    try_edit, guard_editable_bot_message, try_sticker
+    try_edit, guard_editable_bot_message, member_check, try_sticker
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -34,6 +35,19 @@ def tup(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+def slashear(update, context):
+    log_command(update)
+    if update.message.reply_to_message:
+        words = update.message.reply_to_message.text.split()
+        response = "/" + words[0].lower()
+        for word in words[1:]:
+            response += word.capitalize()
+        try_msg(context.bot,
+                chat_id=update.message.chat_id,
+                parse_mode="HTML",
+                text=response)
+              
+              
 def gracias(update: Update, context: CallbackContext) -> None:
     """
     Responds with a sticker saying "you're welcome!"
@@ -44,6 +58,47 @@ def gracias(update: Update, context: CallbackContext) -> None:
                 chat_id=update.message.chat_id,
                 sticker="CAACAgEAAxkBAAEIGOFkDPttpRc6CvU2knm"
                         "-GXAwP8inxgAC3AEAAqnzSUfg84mzRL-JRS8E")
+
+
+def uwuspeech(update: Update, context: CallbackContext) -> None:
+    """
+    Converts a phrase into an uwu-ized version
+    """
+    log_command(update)
+    arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
+    message = arg.replace('r', 'w') \
+        .replace('l', 'w') \
+        .replace('k', 'c') \
+        .replace('p', 'pw') \
+        .replace('R', 'W') \
+        .replace('L', 'W') \
+        .replace('K', 'C') \
+        .replace('P', 'PW')
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message)
+
+
+def repetir(update: Update, context: CallbackContext) -> None:
+    """
+    Repeats a given message
+    """
+    log_command(update)
+    arg = get_arg(update)
+    if update.message.reply_to_message and not arg:
+        arg = update.message.reply_to_message.text
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=arg)
+
+# --- Acronym Commands ---
 
 
 def desiglar(update: Update, context: CallbackContext) -> None:
@@ -89,56 +144,65 @@ def siglar(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
-def slashear(update, context):
+def glosario(update: Update, context: CallbackContext) -> None:
+    """Sends a list of acronyms and meanings to the private chat
+    of the user that called the command."""
+
     log_command(update)
-    if update.message.reply_to_message:
-        words = update.message.reply_to_message.text.split()
-        response = "/" + words[0].lower()
-        for word in words[1:]:
-            response += word.capitalize()
+
+    if not member_check(update, context):
+        return
+
+    arg = get_arg(update)
+
+    if arg:
+        if len(arg) > 1:
+            try_msg(context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="HTML",
+                    text="Este comando sólo puede invocarse "
+                         "con 1 (un) caracter o ninguno.")
+            return
+        acronyms = data.Acronyms.list_by_letter(arg.lower())
+        if not acronyms:
+            try_msg(context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="HTML",
+                    text=f"No encontré siglas que empiecen con {arg} :^(")
+            return
+    else:
+        acronyms = data.Acronyms.list_all()
+
+    acronyms.sort(key=lambda x: x[0])
+
+    if update.message.from_user.id != update.message.chat_id:
         try_msg(context.bot,
                 chat_id=update.message.chat_id,
                 parse_mode="HTML",
-                text=response)
+                text=f"Enviaré la lista de siglas a tu chat privado ;^)")
 
+    separator = f"\n➖➖➖➖➖➖➖"
+    msg = separator
 
-def uwuspeech(update: Update, context: CallbackContext) -> None:
-    """
-    Converts a phrase into an uwu-ized version
-    """
-    log_command(update)
-    arg = get_arg(update)
-    if update.message.reply_to_message and not arg:
-        arg = update.message.reply_to_message.text
+    for idx, acro in enumerate(acronyms):
+        definition = f"\n{acro[0]}\n{acro[1]}"
 
-    message = arg.replace('r', 'w') \
-        .replace('l', 'w') \
-        .replace('k', 'c') \
-        .replace('p', 'pw') \
-        .replace('R', 'W') \
-        .replace('L', 'W') \
-        .replace('K', 'C') \
-        .replace('P', 'PW')
+        if len(msg + definition + separator) > constants.MAX_MESSAGE_LENGTH:
+            try_msg(context.bot,
+                    chat_id=update.message.from_user.id,
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    text=escape_markdown(msg, version=2),
+                    disable_web_page_preview=True)
+            msg = separator
 
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=message)
+        msg += definition + separator
 
-
-def repetir(update: Update, context: CallbackContext) -> None:
-    """
-    Repeats a given message
-    """
-    log_command(update)
-    arg = get_arg(update)
-    if update.message.reply_to_message and not arg:
-        arg = update.message.reply_to_message.text
-
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=arg)
+        if idx == len(acronyms) - 1:
+            try_msg(context.bot,
+                    chat_id=update.message.from_user.id,
+                    parse_mode=ParseMode.MARKDOWN_V2,
+                    text=escape_markdown(msg, version=2),
+                    disable_web_page_preview=True)
 
 
 # --- List Commands ---
