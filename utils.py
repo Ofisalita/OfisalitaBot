@@ -70,6 +70,14 @@ def try_poll(bot: Bot, attempts: int = 2, **params) -> None:
     _try_send(bot, attempts, bot.send_poll, error_message, **params)
 
 
+def try_delete(bot: Bot, attempts: int = 2, **params) -> None:
+    """
+    Make multiple attempts to delete a message.
+    """
+    error_message = f"Deleting message {params['message_id']} in chat"
+    _try_send(bot, attempts, bot.delete_message, error_message, **params)
+
+
 def send_long_message(bot: Bot, **params) -> None:
     """
     Recursively breaks long texts into multiple messages,

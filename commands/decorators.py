@@ -4,7 +4,7 @@ from typing import Callable
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from config.auth import group_id
+from config.auth import group_id, debug
 from config.logger import logger
 from utils import try_msg
 
@@ -16,6 +16,10 @@ def member_exclusive(func: Callable):
 
     @functools.wraps(func)
     def member_check(update: Update, context: CallbackContext) -> None:
+        if debug:
+            func(update, context)
+            return
+
         chat_member = context.bot.getChatMember(group_id,
                                                 update.message.from_user.id)
 
