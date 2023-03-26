@@ -5,7 +5,7 @@ from bot import updater, dp
 from config.auth import admin_ids
 
 from commands.acronym import desiglar, siglar, glosario
-from commands.admin import get_log
+from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll
@@ -33,6 +33,7 @@ def main():
 
     # Admin
     add_command('get_log', get_log, filters=Filters.user(admin_ids))
+    add_command('prohibir', prohibir)
 
     # Counter
     add_command('contador', contador)
