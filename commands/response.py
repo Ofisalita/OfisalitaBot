@@ -2,7 +2,7 @@ from telegram import Update
 from telegram.ext import CallbackContext
 
 from config.logger import log_command
-from utils import try_msg, try_sticker
+from utils import try_msg, try_sticker, try_poll
 
 
 def start(update: Update, context: CallbackContext) -> None:
@@ -48,15 +48,12 @@ def weekly_poll(update: Update, context: CallbackContext) -> None:
 
     log_command(update)
 
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            reply_markup=context.bot.send_poll(
-                chat_id=update.message.chat_id,
-                question="Esta semana voy a la U los días",
-                options=["Lunes", "Martes", "Miércoles",
-                         "Jueves", "Viernes", "Sábado",
-                         "Domingo", "No voy / Ver respuestas"],
-                is_anonymous=False,
-                allows_multiple_answers=True,
-                type="regular"))
+    try_poll(context.bot,
+             chat_id=update.message.chat_id,
+             question="Esta semana voy a la U los días",
+             options=["Lunes", "Martes", "Miércoles",
+                      "Jueves", "Viernes", "Sábado",
+                      "Domingo", "No voy / Ver respuestas"],
+             is_anonymous=False,
+             allows_multiple_answers=True,
+             type="regular")
