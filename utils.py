@@ -16,7 +16,8 @@ for character in ascii_lowercase:
                                     if word.lower().startswith(character)]
 
 
-def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
+def _try_send(bot: Bot, attempts: int,
+              function: callable, error_message: str, **params) -> None:
     """
     Make multiple attempts to send a message.
     """
@@ -24,80 +25,50 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
     attempt = 1
     while attempt <= attempts:
         try:
-            bot.send_message(**params)
+            function(**params)
         except TelegramError as e:
             logger.error((
-                f"[Attempt {attempt}/{attempts}] Messaging chat {chat_id} "
-                f"raised following error: {type(e).__name__}: {e}"
-            )
-            )
+                f"[Attempt {attempt}/{attempts}] {error_message} {chat_id} "
+                f"raised following error: {type(e).__name__}: {e}"))
         else:
             break
         attempt += 1
 
     if attempt > attempts:
-        logger.error((
-            f"Max attempts reached for chat {str(chat_id)}."
-            "Aborting message and raising exception."
-        )
-        )
+        logger.error((f"Max attempts reached for chat {str(chat_id)}."
+                      "Aborting message and raising exception."))
+
+
+def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
+    """
+    Make multiple attempts to send a text message.
+    """
+    error_message = "Messaging chat"
+    _try_send(bot, attempts, bot.send_message, error_message, **params)
 
 
 def try_edit(bot: Bot, attempts: int = 2, **params) -> None:
     """
     Make multiple attempts to edit a message.
     """
-    chat_id = params["chat_id"]
-    message_id = params["message_id"]
-    attempt = 1
-    while attempt <= attempts:
-        try:
-            bot.edit_message_text(**params)
-        except TelegramError as e:
-            logger.error((
-                f"[Attempt {attempt}/{attempts}] "
-                f"Editing message {message_id} "
-                f"in chat {chat_id} "
-                f"raised following error: {type(e).__name__}: {e}"
-            )
-            )
-        else:
-            break
-        attempt += 1
-
-    if attempt > attempts:
-        logger.error((
-            f"Max attempts reached for chat {str(chat_id)}."
-            "Aborting edit and raising exception."
-        )
-        )
+    error_message = f"Editing message {params['message_id']} in chat"
+    _try_send(bot, attempts, bot.edit_message_text, error_message, **params)
 
 
 def try_sticker(bot: Bot, attempts: int = 2, **params) -> None:
     """
     Make multiple attempts to send a sticker.
     """
-    chat_id = params["chat_id"]
-    attempt = 1
-    while attempt <= attempts:
-        try:
-            bot.send_sticker(**params)
-        except TelegramError as e:
-            logger.error((
-                f"[Attempt {attempt}/{attempts}] Stickering chat {chat_id} "
-                f"raised following error: {type(e).__name__}: {e}"
-            )
-            )
-        else:
-            break
-        attempt += 1
+    error_message = "Stickering chat"
+    _try_send(bot, attempts, bot.send_sticker, error_message, **params)
 
-    if attempt > attempts:
-        logger.error((
-            f"Max attempts reached for chat {str(chat_id)}."
-            "Aborting message and raising exception."
-        )
-        )
+
+def try_poll(bot: Bot, attempts: int = 2, **params) -> None:
+    """
+    Make multiple attempts to send a poll.
+    """
+    error_message = "Sending poll to chat"
+    _try_send(bot, attempts, bot.send_poll, error_message, **params)
 
 
 def send_long_message(bot: Bot, **params) -> None:

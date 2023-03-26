@@ -70,7 +70,8 @@ Comandos que instan al bot a responder algo particular.
 
 - `/start` - Responde un saludo.
 - `/tup` - Responde "tup".
-- `/[gracias | garcias]` - Response un sticker de "denarda".
+- `/[gracias | garcias]` - Responde un sticker de "denarda".
+- `/asistencia` - Responde con un poll de días de la semana para ver cuándo asiste cada persona.
 
 ### Texto
 
