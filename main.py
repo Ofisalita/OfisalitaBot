@@ -8,7 +8,7 @@ from commands.acronym import desiglar, siglar, glosario
 from commands.admin import get_log
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
-from commands.response import start, tup, gracias
+from commands.response import start, tup, gracias, weekly_poll
 from commands.text import slashear, uwuspeech, repetir
 
 
@@ -55,6 +55,7 @@ def main():
     add_command('tup', tup)
     add_command('start', start)
     add_command(['gracias', 'garcias'], gracias)
+    add_command('asistencia', weekly_poll)
 
     updater.start_polling()
     updater.idle()
