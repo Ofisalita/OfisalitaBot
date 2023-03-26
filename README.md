@@ -84,3 +84,4 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 ### Admin
 
 - `/get_log` - Muestra el log del bot por interno a los IDs configurados como admins.
+- `/prohibir (reply)` - Hace que el bot elimine el mensaje al que se le responde (solo mensajes del bot).
