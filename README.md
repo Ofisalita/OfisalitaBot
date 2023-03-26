@@ -13,6 +13,8 @@ Para mandar un mensaje está creada la función `try_msg` en los `utils`, que es
 
 El comando más simple es `tup` en `commands/response.py`. Revisarlo para ver un ejemplo de cómo se hace.
 
+Los comandos ya establecidos tienen el decorador `@member_exclusive` que se encarga de verificar que el usuario que ejecuta el comando es miembro del grupo. Si no lo es, no se ejecuta el comando. Si estás corriendo localmente el bot, puedes cambiar el valor `debug` en `config/auth.py` a `True` para que no verifique esto.
+
 ### Estructura
 
 - `config`
