@@ -4,9 +4,11 @@ from datetime import datetime
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.decorators import member_exclusive
 from config.logger import log_command
 
 
+@member_exclusive
 def get_log(update: Update, context: CallbackContext) -> None:
     """
     Gets the bot's command log

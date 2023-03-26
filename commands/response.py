@@ -1,10 +1,12 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import try_msg, try_sticker, try_poll
 
 
+@member_exclusive
 def start(update: Update, context: CallbackContext) -> None:
     """
     Send a message when the command /start is issued.
@@ -17,6 +19,7 @@ def start(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def tup(update: Update, context: CallbackContext) -> None:
     """
     Responds with the message 'tup'
@@ -29,6 +32,7 @@ def tup(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def gracias(update: Update, context: CallbackContext) -> None:
     """
     Responds with a sticker saying "you're welcome!"
@@ -41,6 +45,7 @@ def gracias(update: Update, context: CallbackContext) -> None:
                         "-GXAwP8inxgAC3AEAAqnzSUfg84mzRL-JRS8E")
 
 
+@member_exclusive
 def weekly_poll(update: Update, context: CallbackContext) -> None:
     """
     Sends a poll asking what days of the week people can attend

@@ -1,13 +1,14 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg, guard_editable_bot_message, try_edit
-
 
 COUNTER_HASHTAG = "#CONTADOR"
 
 
+@member_exclusive
 def contador(update: Update, context: CallbackContext) -> None:
     """
     Starts an editable counter
@@ -22,6 +23,7 @@ def contador(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def sumar(update: Update, context: CallbackContext, sign: int = 1) -> None:
     """
     Adds a number to a counter (default 1)
@@ -55,6 +57,7 @@ def sumar(update: Update, context: CallbackContext, sign: int = 1) -> None:
     )
 
 
+@member_exclusive
 def restar(update: Update, context: CallbackContext) -> None:
     """
     Subtracts a number to a counter (default 1)

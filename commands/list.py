@@ -1,13 +1,14 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg, guard_editable_bot_message, try_edit
-
 
 LIST_HASHTAG = "#LISTA"
 
 
+@member_exclusive
 def lista(update: Update, context: CallbackContext) -> None:
     """
     Starts an editable list
@@ -22,6 +23,7 @@ def lista(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def agregar(update: Update, context: CallbackContext) -> None:
     """
     Adds an item to a list
@@ -46,6 +48,7 @@ def agregar(update: Update, context: CallbackContext) -> None:
     )
 
 
+@member_exclusive
 def quitar(update: Update, context: CallbackContext) -> None:
     """
     Removes an item from a list
@@ -85,6 +88,7 @@ def quitar(update: Update, context: CallbackContext) -> None:
     )
 
 
+@member_exclusive
 def editar(update: Update, context: CallbackContext) -> None:
     """
     Edits an item from a list
@@ -125,6 +129,7 @@ def editar(update: Update, context: CallbackContext) -> None:
     )
 
 
+@member_exclusive
 def deslistar(update: Update, context: CallbackContext) -> None:
     """
     Cierra una lista
