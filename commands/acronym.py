@@ -1,14 +1,15 @@
-import data
-
 from telegram import Update, ParseMode, constants
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
+import data
+from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg, reverse_acronym, \
-    generate_acronym, member_check
+    generate_acronym
 
 
+@member_exclusive
 def desiglar(update: Update, context: CallbackContext) -> None:
     """
     Turns an acronym into its corresponding phrase
@@ -29,6 +30,7 @@ def desiglar(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def siglar(update: Update, context: CallbackContext) -> None:
     """
     Saves a phrase as an acronym
@@ -52,15 +54,12 @@ def siglar(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def glosario(update: Update, context: CallbackContext) -> None:
     """Sends a list of acronyms and meanings to the private chat
     of the user that called the command."""
 
     log_command(update)
-
-    if not member_check(update, context):
-        return
-
     arg = get_arg(update)
 
     if arg:

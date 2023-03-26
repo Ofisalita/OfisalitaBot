@@ -1,10 +1,12 @@
 from telegram import Update
 from telegram.ext import CallbackContext
 
+from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg
 
 
+@member_exclusive
 def slashear(update: Update, context: CallbackContext) -> None:
     """
     Converts a phrase into a slash-ized version
@@ -21,6 +23,7 @@ def slashear(update: Update, context: CallbackContext) -> None:
                 text=response)
 
 
+@member_exclusive
 def uwuspeech(update: Update, context: CallbackContext) -> None:
     """
     Converts a phrase into an uwu-ized version
@@ -45,6 +48,7 @@ def uwuspeech(update: Update, context: CallbackContext) -> None:
             text=message)
 
 
+@member_exclusive
 def repetir(update: Update, context: CallbackContext) -> None:
     """
     Repeats a given message
