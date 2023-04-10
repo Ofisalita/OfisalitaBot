@@ -8,8 +8,9 @@ from commands.acronym import desiglar, siglar, glosario
 from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
-from commands.response import start, tup, gracias, weekly_poll
+from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.text import slashear, uwuspeech, repetir
+from commands.gpt import reply_gpt, reply_qa, reply_fill
 
 
 def add_command(command: str | list[str], callback: callable, **kwargs):
@@ -57,6 +58,12 @@ def main():
     add_command('start', start)
     add_command(['gracias', 'garcias'], gracias)
     add_command('asistencia', weekly_poll)
+    add_command('hello', reply_hello)
+
+    # AI
+    add_command('gpt', reply_gpt)
+    add_command('qa', reply_qa)
+    add_command('gb', reply_fill)
 
     updater.start_polling()
     updater.idle()
