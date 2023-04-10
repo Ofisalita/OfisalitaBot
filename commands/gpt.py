@@ -37,7 +37,6 @@ def openai_chat(conversation: list[dict[str, str]], temperature: int) -> str:
             messages=conversation,
             temperature=temperature
         )
-        print(response)
         text = response['choices'][0]['message']['content'].strip()
         return text if text != "" else "_(No response)_"
     except Exception as e:
