@@ -74,6 +74,7 @@ Comandos que instan al bot a responder algo particular.
 - `/tup` - Responde "tup".
 - `/[gracias | garcias]` - Responde un sticker de "denarda".
 - `/asistencia` - Responde con un poll de días de la semana para ver cuándo asiste cada persona.
+- `/hello` - Responde como reply al mensaje al que se responde.
 
 ### Texto
 
@@ -82,6 +83,12 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 - `/slashear (reply)` - Responde con el texto del mensaje al que se responde en un texto camel case con un slash.
 - `/['uwuspeech' | 'uwuspeak' | 'uwuizar' | 'uwu'] [text | reply]` - Responde con el texto del mensaje al que se responde en un texto uwu-ificado.
 - `/repetir [text | reply]` - Responde con el mismo texto del argumento.
+
+### OpenAI/GPT
+
+- `/gpt [text | reply]` - Genera una respuesta al texto del argumento. Usa el modelo de ChatGPT `gpt-3.5-turbo`.
+- `/qa [text | reply]` - Competa el texto del argumento, usando el modelo de GPT-3 `curie`. Warning: tiene menos filtros que ChatGPT.
+- `/gb [text | reply]` - Rellena los guiones bajos del texto del argumento, usando el modelo de ChatGPT `gpt-3.5-turbo`. A veces cambia un poco el texto original.
 
 ### Admin
 
