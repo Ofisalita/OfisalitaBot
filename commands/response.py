@@ -62,3 +62,18 @@ def weekly_poll(update: Update, context: CallbackContext) -> None:
              is_anonymous=False,
              allows_multiple_answers=True,
              type="regular")
+
+
+@member_exclusive
+def reply_hello(update: Update, context: CallbackContext) -> None:
+    """
+    Replys with the message 'hello there'
+    """
+    log_command(update)
+    message = "hello there"
+    reply_message_id = update.message.message_id
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message,
+            reply_to_message_id=reply_message_id)

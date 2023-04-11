@@ -108,6 +108,20 @@ def get_arg(update: Update) -> str:
     return arg
 
 
+def get_arg_reply(update: Update) -> str:
+    """
+    Returns the argument of a command or the text of a reply.
+    (Preference towards replies)
+    """
+    if update.message.reply_to_message is None:
+        return get_arg(update)
+    try:
+        arg = update.message.reply_to_message.text
+    except AttributeError:
+        arg = ""
+    return arg
+
+
 def generate_acronym(string: str) -> str:
     """
     Generates a lowercase acronym of the input string.
