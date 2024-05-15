@@ -86,9 +86,8 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 
 ### OpenAI/GPT
 
-- `/gpt [text | reply]` - Genera una respuesta al texto del argumento. Usa el modelo de ChatGPT `gpt-3.5-turbo`.
-- `/qa [text | reply]` - Competa el texto del argumento, usando el modelo de GPT-3 `curie`. Warning: tiene menos filtros que ChatGPT.
-- `/gb [text | reply]` - Rellena los guiones bajos del texto del argumento, usando el modelo de ChatGPT `gpt-3.5-turbo`. A veces cambia un poco el texto original.
+- `/gpt [text | reply]` - Genera una respuesta al texto del argumento. Usa el modelo de Anthropic Claude Sonnet.
+- `/gb [text | reply]` - Rellena los guiones bajos del texto del argumento, usando el modelo de Anthropic Claude Sonnet. A veces cambia un poco el texto original.
 
 ### Admin
 
