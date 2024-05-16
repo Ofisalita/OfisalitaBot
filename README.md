@@ -88,7 +88,7 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 
 - `/gpt [text | reply]` - Genera una respuesta al texto del argumento. Usa el modelo Anthropic Claude Sonnet.
 - `/gb [text | reply]` - Rellena los guiones bajos del texto del argumento, usando el modelo Anthropic Claude Sonnet. A veces cambia un poco el texto original.
-- `/desigliar [text | reply]` - Inventa una desiglacióñ para una sigla usando el modelo Anthropic Claude Sonnet.
+- `/desigliar [text | reply]` - Inventa una desiglación para una sigla usando el modelo Anthropic Claude Sonnet.
 
 ### Admin
 
