@@ -10,7 +10,7 @@ from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.text import slashear, uwuspeech, repetir
-from commands.gpt import reply_gpt, reply_qa, reply_fill
+from commands.gpt import reply_gpt, reply_fill, desigliar
 
 
 def add_command(command: str | list[str], callback: callable, **kwargs):
@@ -62,8 +62,8 @@ def main():
 
     # AI
     add_command('gpt', reply_gpt)
-    add_command('qa', reply_qa)
     add_command('gb', reply_fill)
+    add_command('desigliar', desigliar)
 
     updater.start_polling()
     updater.idle()
