@@ -154,7 +154,7 @@ def desigliar(update: Update, context: CallbackContext) -> None:
         msg("assistant", "no me ha pasado"),
         msg("user", "qps"),
         msg("assistant", "quien pa su"),
-        msg("user", "ypqn"),
+        msg("user", "ypqnm"),
         msg("assistant", "y por que no me"),
         msg("user", message)
     ]
