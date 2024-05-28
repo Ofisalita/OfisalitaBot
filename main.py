@@ -1,4 +1,4 @@
-from telegram.ext import CommandHandler, Filters
+from telegram.ext import CommandHandler, MessageHandler, Filters
 
 import data
 from bot import updater, dp
@@ -9,6 +9,7 @@ from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
+from commands.summary import resumir, get_last_n
 from commands.text import slashear, uwuspeech, repetir
 from commands.gpt import reply_gpt, reply_fill, desigliar
 
@@ -23,9 +24,32 @@ def add_command(command: str | list[str], callback: callable, **kwargs):
     else:
         dp.add_handler(CommandHandler(command, callback, **kwargs))
 
+def receive_message(update, context):
+    """
+    Receives a message and prints it back to console.
+    """
+    author_id = update.message.from_user.id
+    author_username = update.message.from_user.username
+    if update.message.forward_from:
+        author_id = update.message.forward_from.id
+        author_username = update.message.forward_from.username
+    elif update.message.forward_sender_name:
+        author_id = 0
+        author_username = update.message.forward_sender_name
+    if update.message.text is not None:
+        data.Messages.add(
+            update.message.message_id,
+            update.message.date,
+            author_id,
+            author_username,
+            update.message.text,
+            update.message.reply_to_message.message_id if update.message.reply_to_message else None
+        )
 
 def main():
     data.init()
+
+    dp.add_handler(MessageHandler(~Filters.command, receive_message))
 
     # Acronym
     add_command('desiglar', desiglar)
@@ -64,6 +88,10 @@ def main():
     add_command('gpt', reply_gpt)
     add_command('gb', reply_fill)
     add_command('desigliar', desigliar)
+
+    # Summary
+    add_command('resumir', resumir)
+    add_command('get_last_n', get_last_n)
 
     updater.start_polling()
     updater.idle()
