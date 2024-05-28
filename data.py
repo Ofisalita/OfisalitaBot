@@ -11,8 +11,9 @@ def init() -> None:
     conn = sqlite3.connect(config.db.db_file_path)
     cur = conn.cursor()
     cur.execute(
-        'CREATE TABLE IF NOT EXISTS Acronyms (acronym VARCHAR(255) PRIMARY KEY, \
-        definition VARCHAR(255) NOT NULL)')
+        'CREATE TABLE IF NOT EXISTS Acronyms (acronym VARCHAR(255) PRIMARY KEY, definition VARCHAR(255) NOT NULL);')
+    cur.execute(
+        'CREATE TABLE IF NOT EXISTS Messages (message_id INTEGER PRIMARY KEY, datetime INTEGER NOT NULL, user_id INTEGER NOT NULL, username VARCHAR(255), message TEXT NOT NULL, reply_to INTEGER);')
     logger.info("SQLite initialized")
 
 
@@ -71,3 +72,38 @@ class Acronyms:
             f"SELECT * FROM Acronyms WHERE (acronym LIKE '{let}%')"
         ).fetchall()
         return rows
+
+class Messages:
+    @staticmethod
+    def add(message_id: int, datetime: int, user_id: int, username: str, message: str, reply_to: int) -> None:
+        """
+        Adds a message to the database.
+        """
+        conn = connect()
+        cur = conn.cursor()
+        cur.execute('INSERT INTO Messages VALUES (?, ?, ?, ?, ?, ?)',
+                    [message_id, datetime, user_id, username, message, reply_to])
+        conn.commit()
+
+    @staticmethod
+    def get(message_id: int) -> tuple[int, int, int, str, str, int] | None:
+        """
+        Gets a message from the database.
+        """
+        cur = connect().cursor()
+        row = cur.execute(
+            'SELECT * FROM Messages WHERE message_id = ?',
+            [message_id]).fetchone()
+        return row
+    
+    @staticmethod
+    def getLastN(n: int) -> list[tuple[int, int, int, str, str, int]]:
+        """
+        Gets the last N messages from the database.
+        """
+        if (0 < n < 100):
+            cur = connect().cursor()
+            rows = cur.execute(
+                'SELECT * FROM Messages ORDER BY message_id DESC LIMIT ?',
+                [n]).fetchall()
+            return rows
