@@ -97,13 +97,20 @@ class Messages:
         return row
     
     @staticmethod
-    def getLastN(n: int) -> list[tuple[int, int, int, str, str, int]]:
+    def get_n(n: int, from_id: int | None = None) -> list[sqlite3.Row]:
         """
-        Gets the last N messages from the database.
+        Gets the last N messages from the database, starting from a given message_id
         """
-        if (0 < n < 100):
-            cur = connect().cursor()
-            rows = cur.execute(
-                'SELECT * FROM Messages ORDER BY message_id DESC LIMIT ?',
-                [n]).fetchall()
-            return rows
+        if 0 < n <= 1000:
+            conn = connect()
+            conn.row_factory = sqlite3.Row
+            cur = conn.cursor()
+            if from_id is None:
+                rows = cur.execute(
+                    'SELECT * FROM (SELECT * FROM Messages ORDER BY message_id DESC LIMIT ?) ORDER BY message_id ASC',
+                    [n]).fetchall()
+            else:
+                rows = cur.execute(
+                    'SELECT * FROM (SELECT * FROM Messages WHERE message_id <= ? ORDER BY message_id DESC LIMIT ?) ORDER BY message_id ASC',
+                    [from_id, n]).fetchall()
+            return [dict(row) for row in rows]
