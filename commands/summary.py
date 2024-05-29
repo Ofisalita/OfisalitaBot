@@ -97,11 +97,13 @@ def resumir(update: Update, context: CallbackContext) -> None:
     print(response)
     result = response["choices"][0]["message"]["content"]
 
+    start_message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
+    end_message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
     try_msg(
         context.bot,
         chat_id=update.message.chat_id,
         parse_mode="Markdown",
-        text=result,
+        text=f"Resumen de {n} mensajes:\n[[Inicio]({start_message_link}) - [Fin]({end_message_link})]\n{result}",
         reply_to_message_id=reply_message_id,
     )
 
