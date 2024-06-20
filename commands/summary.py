@@ -14,7 +14,7 @@ except ImportError:
     openai_key = None
 
 
-@member_exclusive
+@group_exclusive
 def resumir(update: Update, context: CallbackContext) -> None:
     """
     Attempts to summarize a given text

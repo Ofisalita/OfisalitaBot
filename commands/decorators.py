@@ -38,3 +38,30 @@ def member_exclusive(func: Callable):
         return
 
     return member_check
+
+def group_exclusive(func: Callable):
+    """Decorator that checks whether the update was sent in the group
+    configured in auth.py. If it wasn't, sends a "forbidden" message.
+    """
+
+    @functools.wraps(func)
+    def group_check(update: Update, context: CallbackContext) -> None:
+        if debug:
+            func(update, context)
+            return
+
+        if update.message.chat_id != group_id:
+            try_msg(context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="HTML",
+                    text="<b>403 FORBIDDEN</b>")
+            logger.warning((
+                f"[NOT IN GROUP] [Command '{update.message.text}' "
+                f"was called by {update.message.chat_id}]"
+            ))
+            return
+
+        func(update, context)
+        return
+
+    return group_check
