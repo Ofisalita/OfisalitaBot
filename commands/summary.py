@@ -236,15 +236,3 @@ def button(update: Update, context: CallbackContext) -> None:
         elif query_data["callback"] == "cancel_summary":
             query.edit_message_text(
                 text=f"{query.message.text}\n\nResumen cancelado.")
-
-
-# Debug
-@ member_exclusive
-def get_last_n(update: Update, context: CallbackContext) -> None:
-    """
-    Gets the last N messages from the database.
-    """
-    log_command(update)
-
-    n = int(get_arg(update))
-    messages = data.Messages.get_n(n)
