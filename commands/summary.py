@@ -110,7 +110,9 @@ def resumir(update: Update, context: CallbackContext) -> None:
         context.bot,
         chat_id=update.message.chat_id,
         parse_mode="Markdown",
-        text=f"Resumen de {n} mensajes:\n[[Inicio]({start_message_link}) - [Fin]({end_message_link})]\n{result}",
+        text=f"Resumen de {len(input_messages)} mensajes:\n" +
+             f"[[Inicio]({start_message_link}) - [Fin]({end_message_link})]\n" +
+             str(result),
         reply_to_message_id=reply_message_id,
     )
 
