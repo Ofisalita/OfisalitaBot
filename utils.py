@@ -5,6 +5,7 @@ from string import ascii_lowercase
 from telegram import Update, Bot, TelegramError, constants as tg_constants
 from telegram.ext import CallbackContext
 
+import data
 from config.logger import logger
 
 word_file = "static/words.txt"
@@ -16,7 +17,7 @@ for character in ascii_lowercase:
 
 
 def _try_send(bot: Bot, attempts: int,
-              function: callable, error_message: str, **params) -> None:
+              function: callable, error_message: str, **params):
     """
     Make multiple attempts to send a message.
     """
@@ -24,7 +25,7 @@ def _try_send(bot: Bot, attempts: int,
     attempt = 1
     while attempt <= attempts:
         try:
-            function(**params)
+            ret = function(**params)
         except TelegramError as e:
             logger.error((
                 f"[Attempt {attempt}/{attempts}] {error_message} {chat_id} "
@@ -36,6 +37,8 @@ def _try_send(bot: Bot, attempts: int,
     if attempt > attempts:
         logger.error((f"Max attempts reached for chat {str(chat_id)}."
                       "Aborting message and raising exception."))
+    
+    return ret
 
 
 def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
@@ -43,7 +46,16 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
     Make multiple attempts to send a text message.
     """
     error_message = "Messaging chat"
-    _try_send(bot, attempts, bot.send_message, error_message, **params)
+    message = _try_send(bot, attempts, bot.send_message, error_message, **params)
+    if message:
+        data.Messages.add(
+            message.message_id,
+            message.date,
+            message.from_user.id,
+            message.from_user.username,
+            message.text,
+            message.reply_to_message.message_id if message.reply_to_message else None
+        )
 
 
 def try_edit(bot: Bot, attempts: int = 2, **params) -> None:
