@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters
 
 import data
 from bot import updater, dp
-from config.auth import admin_ids
+from config.auth import admin_ids, group_id
 
 from commands.acronym import desiglar, siglar, glosario
 from commands.admin import get_log, prohibir
@@ -24,9 +24,11 @@ def add_command(command: str | list[str], callback: callable, **kwargs):
     else:
         dp.add_handler(CommandHandler(command, callback, **kwargs))
 
+
 def receive_message(update, context):
     """
-    Receives a message and prints it back to console.
+    Receives a message and stores it in the database.
+    This doesn't receive messages from the bot itself.
     """
     author_id = update.message.from_user.id
     author_username = update.message.from_user.username
@@ -46,10 +48,9 @@ def receive_message(update, context):
             update.message.reply_to_message.message_id if update.message.reply_to_message else None
         )
 
+
 def main():
     data.init()
-
-    dp.add_handler(MessageHandler(~Filters.command, receive_message))
 
     # Acronym
     add_command('desiglar', desiglar)
@@ -92,6 +93,14 @@ def main():
     # Summary
     add_command('resumir', resumir)
     add_command('get_last_n', get_last_n)
+
+    # Message handler to store messages in the database.
+    dp.add_handler(MessageHandler(
+        (Filters.text &
+         Filters.chat_type.group &
+         Filters.chat(chat_id=group_id)),
+        receive_message),
+        group=1)  # Group must be != 0 so it doesn't conflict with command handlers.
 
     updater.start_polling()
     updater.idle()
