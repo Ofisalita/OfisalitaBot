@@ -1,4 +1,4 @@
-from telegram.ext import CommandHandler, MessageHandler, Filters
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 import data
 from bot import updater, dp
@@ -9,7 +9,7 @@ from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
-from commands.summary import resumir, get_last_n
+from commands.summary import resumir, get_last_n, button
 from commands.text import slashear, uwuspeech, repetir
 from commands.gpt import reply_gpt, reply_fill, desigliar
 
@@ -93,6 +93,8 @@ def main():
     # Summary
     add_command('resumir', resumir)
     add_command('get_last_n', get_last_n)
+
+    dp.add_handler(CallbackQueryHandler(button))
 
     # Message handler to store messages in the database.
     dp.add_handler(MessageHandler(

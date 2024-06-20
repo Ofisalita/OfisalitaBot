@@ -1,5 +1,6 @@
 import random
 import re
+import tiktoken
 from string import ascii_lowercase
 
 from telegram import Update, Bot, TelegramError, constants as tg_constants
@@ -37,7 +38,7 @@ def _try_send(bot: Bot, attempts: int,
     if attempt > attempts:
         logger.error((f"Max attempts reached for chat {str(chat_id)}."
                       "Aborting message and raising exception."))
-    
+
     return ret
 
 
@@ -46,7 +47,8 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
     Make multiple attempts to send a text message.
     """
     error_message = "Messaging chat"
-    message = _try_send(bot, attempts, bot.send_message, error_message, **params)
+    message = _try_send(bot, attempts, bot.send_message,
+                        error_message, **params)
     if message:
         data.Messages.add(
             message.message_id,
@@ -242,3 +244,10 @@ def guard_editable_bot_message(update: Update,
         return True
 
     return False
+
+
+def num_tokens_from_string(string: str, model: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(model)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
