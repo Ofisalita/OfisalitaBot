@@ -101,6 +101,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             text=f"Resumen del [mensaje]({message_link}):\n{result}",
             reply_to_message_id=update.message.message_id,
         )
+        return
 
     # Summarize N messages
     n = None
