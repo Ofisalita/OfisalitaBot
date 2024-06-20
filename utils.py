@@ -253,23 +253,45 @@ def num_tokens_from_string(string: str, model: str) -> int:
     return num_tokens
 
 
-def get_anon_dict(messages):
+def get_names_in_message(message: str) -> list[str]:
     """
-    Returns a dictionary associating usernames with aliases.
+    Returns a list of usernames in a message.
     """
-    anon_dict = {}
-    user_n = 1
+    return re.findall(r"(?:\B|\/\w+)@(\w{5,32}\b)", message)
+
+
+def generate_aliases(names: list[str]) -> dict[str, str]:
+    """
+    Generates a dictionary associating usernames with aliases.
+    """
+    alias_dict = {}
+    for name in names:
+        if name not in alias_dict:
+            alias_type = "Persona" if not name.lower().endswith("bot") else "Bot"
+            alias = None
+            while alias is None or alias in alias_dict.values():
+                alias = f"{alias_type}{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
+            alias_dict[name] = alias
+    return alias_dict
+
+
+def get_alias_dict_from_string(text: str) -> dict[str, str]:
+    """
+    Returns a dictionary associating usernames mentioned in a string with aliases.
+    """
+    return generate_aliases(get_names_in_message(text))
+
+
+def get_alias_dict_from_messages_list(messages):
+    """
+    Returns a dictionary associating usernames from a list of messages with aliases.
+    Considers message authors and mentions.
+    """
+    names = []
     for message in messages:
-        names = [message["username"]] + \
-            re.findall(r"(?:\B|\/\w+)@(\w{5,32}\b)", message["message"])
-        for name in names:
-            if name not in anon_dict:
-                alias_type = "Persona" if not name.lower().endswith("bot") else "Bot"
-                alias = None
-                while alias is None or alias in anon_dict.values():
-                    alias = f"{alias_type}{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
-                anon_dict[name] = alias
-    return anon_dict
+        names.append(message["username"])
+        names += get_names_in_message(message["message"])
+    return generate_aliases(names)
 
 
 def anonymize(messages, anon_dict):
