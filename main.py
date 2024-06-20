@@ -2,7 +2,7 @@ from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryH
 
 import data
 from bot import updater, dp
-from config.auth import admin_ids, group_id
+from config.auth import admin_ids, group_id, debug
 
 from commands.acronym import desiglar, siglar, glosario
 from commands.admin import get_log, prohibir
@@ -99,7 +99,8 @@ def main():
     dp.add_handler(MessageHandler(
         (Filters.text &
          Filters.chat_type.group &
-         Filters.chat(chat_id=group_id)),
+         Filters.chat(chat_id=group_id))
+        if not debug else Filters.text,
         receive_message),
         group=1)  # Group must be != 0 so it doesn't conflict with command handlers.
 
