@@ -29,7 +29,6 @@ def resumir(update: Update, context: CallbackContext) -> None:
     reply_message_id = update.message.message_id
 
     raw_messages = data.Messages.get_n(n, from_id=summarize_from)
-    print(raw_messages)
     input_messages = [
         {
             "message_id": m["message_id"],
@@ -94,7 +93,6 @@ def resumir(update: Update, context: CallbackContext) -> None:
         "https://api.openai.com/v1/chat/completions", headers=headers, json=payload
     )
     response = response.json()
-    print(response)
     result = response["choices"][0]["message"]["content"]
 
     start_message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
