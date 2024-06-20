@@ -158,7 +158,6 @@ def resumir(update: Update, context: CallbackContext) -> None:
     ]
 
     prompt_tokens = num_tokens_from_string(str(prompt_messages), GPT_MODEL)
-    print(prompt_tokens)
     # TODO: Calculate this based on the input messages
     expected_completion_tokens = 300
 

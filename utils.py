@@ -260,7 +260,6 @@ def get_anon_dict(messages):
     anon_dict = {}
     user_n = 1
     for message in messages:
-        print(message)
         if message["username"] not in anon_dict:
             alias = None
             while alias is None or alias in anon_dict.values():
