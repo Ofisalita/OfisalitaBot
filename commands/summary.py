@@ -4,7 +4,7 @@ import data
 from telegram import Update
 from telegram.ext import CallbackContext
 
-from commands.decorators import member_exclusive
+from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
 from utils import try_msg, get_arg
 
