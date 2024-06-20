@@ -8,7 +8,7 @@ from openai import OpenAI
 
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
-from utils import try_msg, get_arg, num_tokens_from_string, get_alias_dict_from_messages_list, anonymize, deanonymize
+from utils import try_msg, get_arg, num_tokens_from_string, get_alias_dict_from_string, get_alias_dict_from_messages_list, anonymize, deanonymize
 
 try:
     from config.auth import openai_key
@@ -78,6 +78,8 @@ def resumir(update: Update, context: CallbackContext) -> None:
 
     # Summarize a specific single replied message
     if not get_arg(update) and update.message.reply_to_message:
+        alias_dict = get_alias_dict_from_string(update.message.reply_to_message.text)
+        prompt_text = anonymize(update.message.reply_to_message.text, alias_dict)
         chat_completion = client.chat.completions.create(
             model=GPT_MODEL,
             messages=[
@@ -87,13 +89,14 @@ def resumir(update: Update, context: CallbackContext) -> None:
                     "content": [
                         {
                             "type": "text",
-                            "text": update.message.reply_to_message.text,
+                            "text": prompt_text,
                         }
                     ],
                 }
             ]
         )
         result = chat_completion.choices[0].message.content
+        result = deanonymize(result, alias_dict)
         message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
         try_msg(
             context.bot,
