@@ -3,6 +3,7 @@ import data
 
 from telegram import Update
 from telegram.ext import CallbackContext
+from openai import OpenAI
 
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
@@ -13,6 +14,9 @@ try:
 except ImportError:
     openai_key = None
 
+GPT_MODEL = "gpt-4o"
+MAX_MESSAGES_TO_SUMMARIZE = 100
+
 
 @group_exclusive
 def resumir(update: Update, context: CallbackContext) -> None:
@@ -21,7 +25,50 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
 
+    client = OpenAI(openai_key)
+
+    # Summarize a specific single message
+    if not get_arg(update) and update.message.reply_to_message:
+        chat_completion = client.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[
+                {
+                    "role": "system",
+                    "content": "Eres un bot para resumir mensajes de un chat. \
+                    Te daré un mensaje y debes resumirlo de forma concisa. No incluyas nada más que el resumen en tu mensaje."
+                },
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": update.message.reply_to_message.text,
+                        }
+                    ],
+                }
+            ]
+        )
+        result = chat_completion.choices[0].message.content
+        message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="Markdown",
+            text=f"Resumen del [mensaje]({message_link}):\n{result}",
+            reply_to_message_id=update.message.message_id,
+        )
+
+    # Summarize N messages
     n = int(get_arg(update))
+
+    if n > MAX_MESSAGES_TO_SUMMARIZE:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text=f"No puedo resumir más de {MAX_MESSAGES_TO_SUMMARIZE} mensajes a la vez.",
+            reply_to_message_id=update.message.message_id,
+        )
+        return
 
     summarize_from = None
     if update.message.reply_to_message:
@@ -48,14 +95,9 @@ def resumir(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {openai_key}",
-    }
-
-    payload = {
-        "model": "gpt-4o",
-        "messages": [
+    chat_completion = client.chat.completions.create(
+        model=GPT_MODEL,
+        messages=[
             {
                 "role": "system",
                 "content": "Eres un bot para resumir mensajes de un chat. \
@@ -84,26 +126,21 @@ def resumir(update: Update, context: CallbackContext) -> None:
                 (129, 34924, 'usuario1', 'que chucha están hablando', None),\
                 OUTPUT:\n\
                 *Baloian estaba tomando pap*\n\
-                -- usuario1 lo vio.\n\
-                -- usuario2 ama a Baloian pero odia la pap.\n\
+                - usuario1 lo vio.\n\
+                - usuario2 ama a Baloian pero odia la pap.\n\
                 *Conversación sobre frameworks de JS*\n\
-                -- usuario3 descubre TupJS.\n\
-                -- usuario2 prefiere BebJS.\n\
-                -- usuario1 no entiende del tema.\n",
+                - usuario3 descubre TupJS.\n\
+                - usuario2 prefiere BebJS.\n\
+                - usuario1 no entiende del tema.\n",
             },
             {
                 "role": "user",
                 "content": [{"type": "text", "text": str(input_messages)}],
             },
-        ],
-    }
-
-    response = requests.post(
-        "https://api.openai.com/v1/chat/completions", headers=headers, json=payload
+        ]
     )
-    response = response.json()
-    result = response["choices"][0]["message"]["content"]
 
+    result = chat_completion.choices[0].message.content
     start_message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
     end_message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
     try_msg(
