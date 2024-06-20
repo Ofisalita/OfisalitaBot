@@ -39,6 +39,15 @@ def resumir(update: Update, context: CallbackContext) -> None:
         for m in raw_messages
     ]
 
+    if not input_messages:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text="No encontré mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos.",
+            reply_to_message_id=reply_message_id,
+        )
+        return
+
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {openai_key}",
