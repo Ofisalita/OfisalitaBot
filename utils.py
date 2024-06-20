@@ -294,21 +294,21 @@ def get_alias_dict_from_messages_list(messages):
     return generate_aliases(names)
 
 
-def anonymize(messages, anon_dict):
+def anonymize(messages, alias_dict):
     """
     Anonymizes the usernames in a list of messages.
     """
     for message in messages:
-        message["username"] = anon_dict[message["username"]]
         message["message"] = message["message"].replace(
-            message["username"], anon_dict[message["username"]])
+            message["username"], alias_dict[message["username"]])
+        message["username"] = alias_dict[message["username"]]
     return messages
 
 
-def deanonymize(generated_message, anon_dict):
+def deanonymize(generated_message, alias_dict):
     """
     Deanonymizes the usernames in a generated message
     """
-    for username, alias in anon_dict.items():
+    for username, alias in alias_dict.items():
         generated_message = generated_message.replace(alias, username)
     return generated_message
