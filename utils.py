@@ -260,11 +260,15 @@ def get_anon_dict(messages):
     anon_dict = {}
     user_n = 1
     for message in messages:
-        if message["username"] not in anon_dict:
-            alias = None
-            while alias is None or alias in anon_dict.values():
-                alias = f"Persona{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
-            anon_dict[message["username"]] = alias
+        names = [message["username"]] + \
+            re.findall(r"(?:\B|\/\w+)@(\w{5,32}\b)", message["message"])
+        for name in names:
+            if name not in anon_dict:
+                alias_type = "Persona" if not name.lower().endswith("bot") else "Bot"
+                alias = None
+                while alias is None or alias in anon_dict.values():
+                    alias = f"{alias_type}{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
+                anon_dict[name] = alias
     return anon_dict
 
 
@@ -274,6 +278,8 @@ def anonymize(messages, anon_dict):
     """
     for message in messages:
         message["username"] = anon_dict[message["username"]]
+        message["message"] = message["message"].replace(
+            message["username"], anon_dict[message["username"]])
     return messages
 
 
