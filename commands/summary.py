@@ -16,7 +16,7 @@ except ImportError:
     openai_key = None
 
 GPT_MODEL = "gpt-4o"
-GPT_PRICING_PER_TOKEN = { # https://openai.com/api/pricing/
+GPT_PRICING_PER_TOKEN = {  # https://openai.com/api/pricing/
     "gpt-4o": {"input": 0.000005, "output": 0.000015},
     "gpt-3.5-turbo-0125": {"input": 0.0000005, "output": 0.000015},
     "gpt-3.5-turbo-instruct": {"input": 0.0000015, "output": 0.000020},
@@ -25,13 +25,14 @@ MAX_MESSAGES_TO_SUMMARIZE = 1000
 
 PROMPT_SYSTEM_MESSAGE_SINGLE = {
     "role": "system",
-    "content": "Eres un bot para resumir mensajes de un chat. \
-                    Te daré un mensaje y debes resumirlo de forma concisa. No incluyas nada más que el resumen en tu mensaje. Utiliza HTML para los formatos de negritas (<b>) e itálicas (<i>)."
+    "content": "Eres un bot para resumir mensajes de un chat. " +
+    "Te daré un mensaje y debes resumirlo de forma concisa. No incluyas nada más que el resumen en tu mensaje. " +
+    "Utiliza HTML para los formatos de <b>negritas</b> e <i>itálicas</i>, NO uses otras etiquetas aparte de <b> y <i>. NO uses Markdown."
 }
 
 PROMPT_SYSTEM_MESSAGE_MULTIPLE = {
     "role": "system",
-            "content": "Eres un bot para resumir mensajes de un chat." +
+            "content": "Eres un bot para resumir mensajes de un chat. " +
             "Te daré una lista de mensajes en el siguiente formato:\n" +
             "(message_id, username, message, reply_to)\n" +
             "\n" +
@@ -98,7 +99,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
-            text=f"Resumen del [mensaje]({message_link}):\n{result}",
+            text=f"Resumen del <a href=\"{message_link}\">mensaje</a>:\n\n{result}",
             reply_to_message_id=update.message.message_id,
         )
         return
@@ -124,7 +125,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
         )
         return
 
-    summarize_from = None
+    summarize_from = update.message.message_id - 1
     if update.message.reply_to_message:
         summarize_from = update.message.reply_to_message.message_id
 
@@ -157,19 +158,21 @@ def resumir(update: Update, context: CallbackContext) -> None:
     ]
 
     prompt_tokens = num_tokens_from_string(str(prompt_messages), GPT_MODEL)
-    expected_completion_tokens = 300 # TODO: Calculate this based on the input messages
+    print(prompt_tokens)
+    # TODO: Calculate this based on the input messages
+    expected_completion_tokens = 300
 
     try_msg(
         context.bot,
         chat_id=update.message.chat_id,
-        text=f"El resumen costará aproximadamente ${round(prompt_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['input'] + expected_completion_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['output'], 5)} USD\n",
+        text=f"El resumen de {len(input_messages)} mensajes costará aproximadamente ${round(prompt_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['input'] + expected_completion_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['output'], 5)} USD\n",
         reply_to_message_id=update.message.message_id,
         reply_markup=InlineKeyboardMarkup([
             [
                 InlineKeyboardButton(
-                    "Resumir", callback_data=json.dumps({"callback": "confirm_summary", "n": n, "summarize_from": summarize_from})),
+                    "Resumir", callback_data=json.dumps(["confirm_summary", n, summarize_from])),
                 InlineKeyboardButton(
-                    "Cancelar", callback_data=json.dumps({"callback": "cancel_summary"})),
+                    "Cancelar", callback_data=json.dumps(["cancel_summary"])),
             ],
         ])
     )
@@ -178,8 +181,10 @@ def resumir(update: Update, context: CallbackContext) -> None:
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     client = OpenAI(api_key=openai_key)
     query_data = json.loads(query.data)
-    n = query_data["n"]
-    summarize_from = query_data["summarize_from"]
+    n = query_data[1]
+    summarize_from = query_data[2]
+    if not summarize_from:
+        summarize_from = query.message.reply_to_message.message_id
 
     raw_messages = data.Messages.get_n(n, from_id=summarize_from)
     input_messages = [
@@ -215,10 +220,11 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         parse_mode="HTML",
         text=f"Resumen de {len(input_messages)} mensajes [<a href=\"{start_message_link}\">Inicio</a> - <a href=\"{end_message_link}\">Fin</a>]:\n" +
              f"<i>Costo: ${round(chat_completion.usage.prompt_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['input'] + chat_completion.usage.completion_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['output'], 5)} USD</i>\n" +
-             f"<i>Tokens input: {input_tokens}, Tokens output: {chat_completion.usage.completion_tokens}, Ratio: {input_tokens/int(chat_completion.usage.completion_tokens)}</i>\n\n" +
+             f"<i>Tokens input: {input_tokens}, Tokens output: {chat_completion.usage.completion_tokens}, Ratio: {int(chat_completion.usage.completion_tokens)/input_tokens}</i>\n\n" +
              str(result),
         reply_to_message_id=query.message.reply_to_message.message_id,
     )
+
 
 # TODO: Refactor. This receives all callback queries, not just the ones from the summary command.
 def button(update: Update, context: CallbackContext) -> None:
@@ -230,10 +236,10 @@ def button(update: Update, context: CallbackContext) -> None:
         return
     else:
         query.answer()
-        if query_data["callback"] == "confirm_summary":
+        if query_data[0] == "confirm_summary":
             query.edit_message_text(
                 text=f"{query.message.text}\n\nResumen aceptado. Procesando...")
             _do_resumir(query, context)
-        elif query_data["callback"] == "cancel_summary":
+        elif query_data[0] == "cancel_summary":
             query.edit_message_text(
                 text=f"{query.message.text}\n\nResumen cancelado.")
