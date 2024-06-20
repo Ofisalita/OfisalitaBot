@@ -21,14 +21,14 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
 
-    n = get_arg(update)
+    n = int(get_arg(update))
 
     summarize_from = None
     if update.message.reply_to_message:
         summarize_from = update.message.reply_to_message.message_id
     reply_message_id = update.message.message_id
 
-    raw_messages = data.Messages.get_n(int(n), from_id=summarize_from)
+    raw_messages = data.Messages.get_n(n, from_id=summarize_from)
     print(raw_messages)
     input_messages = [
         {
@@ -116,7 +116,7 @@ def get_last_n(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
 
-    n = get_arg(update)
+    n = int(get_arg(update))
     messages = data.Messages.get_n(n)
 
     print(messages)
