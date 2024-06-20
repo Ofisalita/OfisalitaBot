@@ -8,7 +8,7 @@ from openai import OpenAI
 
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
-from utils import try_msg, get_arg, num_tokens_from_string
+from utils import try_msg, get_arg, num_tokens_from_string, get_anon_dict, anonymize, deanonymize
 
 try:
     from config.auth import openai_key
@@ -196,6 +196,9 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         }
         for m in raw_messages
     ]
+    anon_dict = get_anon_dict(input_messages)
+    input_messages = anonymize(input_messages, anon_dict)
+
     prompt_messages = [
         PROMPT_SYSTEM_MESSAGE_MULTIPLE,
         {
@@ -212,6 +215,8 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     )
 
     result = chat_completion.choices[0].message.content
+    result = deanonymize(result, anon_dict)
+
     start_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
     end_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
     try_msg(

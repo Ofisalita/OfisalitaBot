@@ -1,7 +1,7 @@
 import random
 import re
 import tiktoken
-from string import ascii_lowercase
+from string import ascii_lowercase, ascii_uppercase
 
 from telegram import Update, Bot, TelegramError, constants as tg_constants
 from telegram.ext import CallbackContext
@@ -251,3 +251,37 @@ def num_tokens_from_string(string: str, model: str) -> int:
     encoding = tiktoken.encoding_for_model(model)
     num_tokens = len(encoding.encode(string))
     return num_tokens
+
+
+def get_anon_dict(messages):
+    """
+    Returns a dictionary associating usernames with aliases.
+    """
+    anon_dict = {}
+    user_n = 1
+    for message in messages:
+        print(message)
+        if message["username"] not in anon_dict:
+            alias = None
+            while alias is None or alias in anon_dict.values():
+                alias = f"Persona{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
+            anon_dict[message["username"]] = alias
+    return anon_dict
+
+
+def anonymize(messages, anon_dict):
+    """
+    Anonymizes the usernames in a list of messages.
+    """
+    for message in messages:
+        message["username"] = anon_dict[message["username"]]
+    return messages
+
+
+def deanonymize(generated_message, anon_dict):
+    """
+    Deanonymizes the usernames in a generated message
+    """
+    for username, alias in anon_dict.items():
+        generated_message = generated_message.replace(alias, username)
+    return generated_message
