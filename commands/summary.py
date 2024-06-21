@@ -81,7 +81,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             alias_dict = get_alias_dict_from_string(
                 update.message.reply_to_message.text)
             prompt_text = anonymize(
-                update.message.reply_to_message.text, alias_dict)
+                [update.message.reply_to_message.text], alias_dict)[0]
             chat_completion = client.chat.completions.create(
                 model=GPT_MODEL,
                 messages=[
