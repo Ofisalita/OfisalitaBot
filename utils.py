@@ -299,9 +299,13 @@ def anonymize(messages, alias_dict):
     Anonymizes the usernames in a list of messages.
     """
     for message in messages:
-        message["message"] = message["message"].replace(
-            message["username"], alias_dict[message["username"]])
-        message["username"] = alias_dict[message["username"]]
+        if isinstance(message, str):
+            for username, alias in alias_dict.items():
+                message = message.replace(username, alias)
+        else:
+            for username, alias in alias_dict.items():
+                message["message"] = message["message"].replace(username, alias)
+            message["username"] = alias_dict[message["username"]]
     return messages
 
 
