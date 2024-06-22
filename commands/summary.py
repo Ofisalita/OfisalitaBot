@@ -7,7 +7,8 @@ from telegram.ext import CallbackContext
 from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
-from commands.decorators import group_exclusive
+from commands.decorators import command
+from commands.controller import CommandController
 from config.logger import log_command
 from utils import (
     try_msg,
@@ -69,124 +70,118 @@ PROMPT_SYSTEM_MESSAGE_MULTIPLE = (
 )
 
 
-@group_exclusive
-def resumir(update: Update, context: CallbackContext) -> None:
+@command(group_exclusive=True)
+def resumir(controller: CommandController) -> None:
     """
     Summarizes multiples messages from the database.
     """
+    update = controller.update
+    context = controller.context
     log_command(update)
-    try:
-        # Summarize a specific single replied message
-        if not get_arg(update) and update.message.reply_to_message:
-            client = ai_client(model=AI_MODEL, user_id=update.message.from_user.id)
-            alias_dict = get_alias_dict_from_string(
-                update.message.reply_to_message.text
-            )
-            prompt_text = anonymize([update.message.reply_to_message.text], alias_dict)[
-                0
-            ]
-            response = client.generate(
-                system=PROMPT_SYSTEM_MESSAGE_SINGLE,
-                conversation=[GenAIMessage("user", prompt_text)],
-            )
-            result = deanonymize(response.message, alias_dict)
-            message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
-            try_msg(
-                context.bot,
-                chat_id=update.message.chat_id,
-                parse_mode="HTML",
-                text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
-                reply_to_message_id=update.message.message_id,
-            )
-            return
 
-        # Summarize N messages
-        n = None
-        try:
-            n = int(get_arg(update))
-        except ValueError:
-            try_msg(
-                context.bot,
-                chat_id=update.message.chat_id,
-                text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
-                reply_to_message_id=update.message.message_id,
-            )
-
-        if n and n > MAX_MESSAGES_TO_SUMMARIZE:
-            try_msg(
-                context.bot,
-                chat_id=update.message.chat_id,
-                text=f"No puedo resumir más de {MAX_MESSAGES_TO_SUMMARIZE} mensajes a la vez.",
-                reply_to_message_id=update.message.message_id,
-            )
-            return
-
-        summarize_from = update.message.message_id - 1
-        if update.message.reply_to_message:
-            summarize_from = update.message.reply_to_message.message_id
-
-        raw_messages = data.Messages.get_n(n, from_id=summarize_from)
-        input_messages = [
-            {
-                "message_id": m["message_id"],
-                "username": m["username"],
-                "message": m["message"],
-                "reply_to": m["reply_to"],
-            }
-            for m in raw_messages
+    client = ai_client(model=AI_MODEL, user_id=update.message.from_user.id)
+    # Summarize a specific single replied message
+    if not get_arg(update) and update.message.reply_to_message:
+        alias_dict = get_alias_dict_from_string(
+            update.message.reply_to_message.text
+        )
+        prompt_text = anonymize([update.message.reply_to_message.text], alias_dict)[
+            0
         ]
-
-        if not input_messages:
-            try_msg(
-                context.bot,
-                chat_id=update.message.chat_id,
-                text="No encontré mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos.",
-                reply_to_message_id=update.message.message_id,
-            )
-            return
-
-        prompt_messages = [
-            PROMPT_SYSTEM_MESSAGE_MULTIPLE,
-            {
-                "role": "user",
-                "content": [{"type": "text", "text": str(input_messages)}],
-            },
-        ]
-
-        input_tokens = num_tokens_from_string(str(prompt_messages), AI_MODEL)
-        # TODO: Calculate this based on the input messages
-        expected_output_tokens = 300
-
+        response = client.generate(
+            system=PROMPT_SYSTEM_MESSAGE_SINGLE,
+            conversation=[GenAIMessage("user", prompt_text)],
+        )
+        result = deanonymize(response.message, alias_dict)
+        message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
         try_msg(
             context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
-            text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(AI_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
+            text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
             reply_to_message_id=update.message.message_id,
-            reply_markup=InlineKeyboardMarkup(
-                [
-                    [
-                        InlineKeyboardButton(
-                            "Resumir",
-                            callback_data=json.dumps(
-                                ["confirm_summary", n, summarize_from]
-                            ),
-                        ),
-                        InlineKeyboardButton(
-                            "Cancelar", callback_data=json.dumps(["cancel_summary"])
-                        ),
-                    ],
-                ]
-            ),
         )
-    except Exception as e:
+        return
+
+    # Summarize N messages
+    n = None
+    try:
+        n = int(get_arg(update))
+    except ValueError:
         try_msg(
             context.bot,
             chat_id=update.message.chat_id,
-            text=f"Hubo un error al procesar el resumen: {e}",
+            text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
             reply_to_message_id=update.message.message_id,
         )
-        raise e
+
+    if n and n > MAX_MESSAGES_TO_SUMMARIZE:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text=f"No puedo resumir más de {MAX_MESSAGES_TO_SUMMARIZE} mensajes a la vez.",
+            reply_to_message_id=update.message.message_id,
+        )
+        return
+
+    summarize_from = update.message.message_id - 1
+    if update.message.reply_to_message:
+        summarize_from = update.message.reply_to_message.message_id
+
+    raw_messages = data.Messages.get_n(n, from_id=summarize_from)
+    input_messages = [
+        {
+            "message_id": m["message_id"],
+            "username": m["username"],
+            "message": m["message"],
+            "reply_to": m["reply_to"],
+        }
+        for m in raw_messages
+    ]
+
+    if not input_messages:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text="No encontré mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos.",
+            reply_to_message_id=update.message.message_id,
+        )
+        return
+
+    prompt_messages = [
+        PROMPT_SYSTEM_MESSAGE_MULTIPLE,
+        {
+            "role": "user",
+            "content": [{"type": "text", "text": str(input_messages)}],
+        },
+    ]
+
+    input_tokens = num_tokens_from_string(str(prompt_messages), AI_MODEL)
+    # TODO: Calculate this based on the input messages
+    expected_output_tokens = 300
+
+    try_msg(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(AI_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
+        reply_to_message_id=update.message.message_id,
+        reply_markup=InlineKeyboardMarkup(
+            [
+                [
+                    InlineKeyboardButton(
+                        "Resumir",
+                        callback_data=json.dumps(
+                            ["confirm_summary", n, summarize_from]
+                        ),
+                    ),
+                    InlineKeyboardButton(
+                        "Cancelar", callback_data=json.dumps(["cancel_summary"])
+                    ),
+                ],
+            ]
+        ),
+    )
 
 
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
