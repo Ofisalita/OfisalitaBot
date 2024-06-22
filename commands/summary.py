@@ -76,9 +76,9 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
     try:
+        client = ai_client(model=AI_MODEL, user_id=update.message.from_user.id)
         # Summarize a specific single replied message
         if not get_arg(update) and update.message.reply_to_message:
-            client = ai_client(model=AI_MODEL, user_id=update.message.from_user.id)
             alias_dict = get_alias_dict_from_string(
                 update.message.reply_to_message.text
             )
