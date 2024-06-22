@@ -12,6 +12,7 @@ from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.summary import resumir, button
 from commands.text import slashear, uwuspeech, repetir
 from commands.gpt import reply_gpt, reply_fill, desigliar
+from commands.stats import stats
 
 
 def add_command(command: str | list[str], callback: callable, **kwargs):
@@ -92,6 +93,9 @@ def main():
 
     # Summary
     add_command('resumir', resumir)
+
+    # Stats
+    add_command('stats', stats)
 
     dp.add_handler(CallbackQueryHandler(button))
 
