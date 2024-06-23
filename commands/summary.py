@@ -90,14 +90,23 @@ def resumir(update: Update, context: CallbackContext) -> None:
                 conversation=[GenAIMessage("user", prompt_text)],
             )
             result = deanonymize(response.message, alias_dict)
-            message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
-            try_msg(
-                context.bot,
-                chat_id=update.message.chat_id,
-                parse_mode="HTML",
-                text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
-                reply_to_message_id=update.message.message_id,
-            )
+            message_link = f"https://t.me/c/{str(update.message.chat_id).replace('-100','')}/{update.message.reply_to_message.message_id}"
+            try:
+                try_msg(
+                    context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="HTML",
+                    text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
+                    reply_to_message_id=update.message.message_id,
+                )
+            except Exception:
+                try_msg(
+                    context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="MarkdownV2",
+                    text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
+                    reply_to_message_id=update.message.message_id,
+                )
             return
 
         # Summarize N messages
@@ -223,18 +232,30 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
 
         result = deanonymize(response.message, alias_dict)
 
-        start_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
-        end_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
-        try_msg(
-            context.bot,
-            chat_id=query.message.chat_id,
-            parse_mode="HTML",
-            text=f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
+        start_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[0]['message_id']}"
+        end_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
+        final_message = (
+            f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
             + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
             + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
-            + str(result),
-            reply_to_message_id=query.message.reply_to_message.message_id,
+            + str(result)
         )
+        try:
+            try_msg(
+                context.bot,
+                chat_id=query.message.chat_id,
+                parse_mode="HTML",
+                text=final_message,
+                reply_to_message_id=query.message.reply_to_message.message_id,
+            )
+        except Exception:
+            try_msg(
+                context.bot,
+                chat_id=query.message.chat_id,
+                parse_mode="MarkdownV2",
+                text=final_message,
+                reply_to_message_id=query.message.reply_to_message.message_id,
+            )
     except Exception as e:
         try_msg(
             context.bot,
