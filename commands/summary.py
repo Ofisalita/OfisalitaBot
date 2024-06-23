@@ -1,5 +1,6 @@
 import data
 import json
+import re
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import CallbackContext
@@ -8,11 +9,8 @@ from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
 from commands.decorators import command
-from commands.controller import CommandController
-from config.logger import log_command
+from commands.base import Command
 from utils import (
-    try_msg,
-    get_arg,
     num_tokens_from_string,
     get_alias_dict_from_string,
     get_alias_dict_from_messages_list,
@@ -25,7 +23,7 @@ try:
 except ImportError:
     openai_key = None
 
-AI_MODEL = "claude-3-sonnet-20240229"
+DEFAULT_MODEL = "claude-3-sonnet-20240229"
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
 PROMPT_SYSTEM_MESSAGE_SINGLE = (
@@ -71,62 +69,47 @@ PROMPT_SYSTEM_MESSAGE_MULTIPLE = (
 
 
 @command(group_exclusive=True)
-def resumir(controller: CommandController) -> None:
+def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     """
     Summarizes multiples messages from the database.
     """
-    update = controller.update
-    context = controller.context
-    log_command(update)
+    cmd = command
+    msg = update.message
 
-    client = ai_client(model=AI_MODEL, user_id=update.message.from_user.id)
+    ai_model = cmd.opts.get("m") or cmd.opts.get("model") or DEFAULT_MODEL
+
+    client = ai_client(model=ai_model, user_id=msg.from_user.id)
     # Summarize a specific single replied message
-    if not get_arg(update) and update.message.reply_to_message:
-        alias_dict = get_alias_dict_from_string(
-            update.message.reply_to_message.text
-        )
-        prompt_text = anonymize([update.message.reply_to_message.text], alias_dict)[
-            0
-        ]
+    if not cmd.arg and msg.reply_to_message:
+        alias_dict = get_alias_dict_from_string(msg.reply_to_message.text)
+        prompt_text = anonymize([msg.reply_to_message.text], alias_dict)[0]
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_SINGLE,
             conversation=[GenAIMessage("user", prompt_text)],
         )
         result = deanonymize(response.message, alias_dict)
         message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
-        try_msg(
-            context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
-            reply_to_message_id=update.message.message_id,
-        )
+        msg.reply_html(f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}')
         return
 
     # Summarize N messages
     n = None
     try:
-        n = int(get_arg(update))
+        n = int(cmd.arg)
     except ValueError:
-        try_msg(
-            context.bot,
-            chat_id=update.message.chat_id,
-            text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
-            reply_to_message_id=update.message.message_id,
+        msg.reply_text(
+            "Debes indicar la cantidad de mensajes hacia atrás que quieres resumir."
         )
 
     if n and n > MAX_MESSAGES_TO_SUMMARIZE:
-        try_msg(
-            context.bot,
-            chat_id=update.message.chat_id,
-            text=f"No puedo resumir más de {MAX_MESSAGES_TO_SUMMARIZE} mensajes a la vez.",
-            reply_to_message_id=update.message.message_id,
+        msg.reply_text(
+            f"El máximo de mensajes a resumir es de {MAX_MESSAGES_TO_SUMMARIZE}."
         )
         return
 
-    summarize_from = update.message.message_id - 1
-    if update.message.reply_to_message:
-        summarize_from = update.message.reply_to_message.message_id
+    summarize_from = msg.message_id - 1
+    if msg.reply_to_message:
+        summarize_from = msg.reply_to_message.message_id
 
     raw_messages = data.Messages.get_n(n, from_id=summarize_from)
     input_messages = [
@@ -140,11 +123,8 @@ def resumir(controller: CommandController) -> None:
     ]
 
     if not input_messages:
-        try_msg(
-            context.bot,
-            chat_id=update.message.chat_id,
-            text="No encontré mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos.",
-            reply_to_message_id=update.message.message_id,
+        msg.text(
+            "No hay mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos."
         )
         return
 
@@ -156,16 +136,13 @@ def resumir(controller: CommandController) -> None:
         },
     ]
 
-    input_tokens = num_tokens_from_string(str(prompt_messages), AI_MODEL)
+    input_tokens = num_tokens_from_string(str(prompt_messages), DEFAULT_MODEL)
     # TODO: Calculate this based on the input messages
     expected_output_tokens = 300
 
-    try_msg(
-        context.bot,
-        chat_id=update.message.chat_id,
-        parse_mode="HTML",
-        text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(AI_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
-        reply_to_message_id=update.message.message_id,
+    msg.reply_html(
+        f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(DEFAULT_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n"
+        + (f"\nOPTS: {json.dumps(cmd.opts)}" if cmd.opts else ""),
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -181,20 +158,27 @@ def resumir(controller: CommandController) -> None:
                 ],
             ]
         ),
+        quote=True,
     )
 
 
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
+    msg = query.message
     try:
+        opts = re.search(r"OPTS: (\{.*\})", msg.text)
+        ai_model = DEFAULT_MODEL
+        if opts:
+            opts = json.loads(opts.group(1))
+            ai_model = opts.get("m") or opts.get("model") or ai_model
         client = ai_client(
-            model=AI_MODEL,
-            user_id=query.message.reply_to_message.from_user.id,
+            model=ai_model,
+            user_id=msg.reply_to_message.from_user.id,
         )
         query_data = json.loads(query.data)
         n = query_data[1]
         summarize_from = query_data[2]
         if not summarize_from:
-            summarize_from = query.message.reply_to_message.message_id
+            summarize_from = msg.reply_to_message.message_id
 
         raw_messages = data.Messages.get_n(n, from_id=summarize_from)
         input_messages = [
@@ -209,7 +193,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        input_tokens = num_tokens_from_string(str(input_messages), AI_MODEL)
+        input_tokens = num_tokens_from_string(str(input_messages), DEFAULT_MODEL)
 
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
@@ -218,25 +202,21 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
 
         result = deanonymize(response.message, alias_dict)
 
-        start_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
-        end_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
-        try_msg(
-            context.bot,
-            chat_id=query.message.chat_id,
-            parse_mode="HTML",
-            text=f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
+        start_message_link = (
+            f"https://t.me/c/{str(msg.chat_id)[4:]}/{input_messages[0]['message_id']}"
+        )
+        end_message_link = (
+            f"https://t.me/c/{str(msg.chat_id)[4:]}/{input_messages[-1]['message_id']}"
+        )
+        msg.reply_html(
+            f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
             + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
             + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
             + str(result),
-            reply_to_message_id=query.message.reply_to_message.message_id,
+            reply_to_message_id=msg.reply_to_message.message_id,
         )
     except Exception as e:
-        try_msg(
-            context.bot,
-            chat_id=query.message.chat_id,
-            text=f"Hubo un error al procesar el resumen: {e}",
-            reply_to_message_id=query.message.reply_to_message.message_id,
-        )
+        msg.reply_text(f"Ocurrió un error al procesar el resumen:\n{e}")
         raise e
 
 
