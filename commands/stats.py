@@ -19,6 +19,7 @@ def stats_detail(update: Update, context: CallbackContext) -> None:
         usage = data.AIRequests.get()
 
         usage_map = {}
+        users_map = {}
         for r in usage:
             if r["model"] not in usage_map:
                 usage_map[r["model"]] = {}
@@ -28,6 +29,7 @@ def stats_detail(update: Update, context: CallbackContext) -> None:
                     "output": 0,
                     "cost": 0,
                 }
+            users_map[r["user_id"]] = r["username"]
             usage_map[r["model"]][r["user_id"]]["input"] += r["input_tokens"]
             usage_map[r["model"]][r["user_id"]]["output"] += r["output_tokens"]
             usage_map[r["model"]][r["user_id"]]["cost"] += r["cost"]
@@ -39,14 +41,14 @@ def stats_detail(update: Update, context: CallbackContext) -> None:
                 )
             )
 
-        text = f"<b>Estadísticas de uso de tokens:</b>\n"
+        text = "<b>Estadísticas de uso de tokens:</b>\n"
         text += f"<i>Desde {datetime.utcfromtimestamp(usage[-1]['datetime']).strftime('%Y-%m-%d')}</i>\n"
         totals = {"input": 0, "output": 0, "cost": 0}
         for model, users in usage_map.items():
             text += f"\n✨ Modelo: <i>{model}</i> ✨\n"
             for user_id, usage in users.items():
                 text += (
-                    f"👤 Usuario {user_id}:\n"
+                    f"👤 {users_map[user_id]}:\n"
                     + f"Input: {usage['input']}; Output: {usage['output']}\n"
                     + f"Gasto: ${round(usage['cost'], 5)} USD\n"
                 )
@@ -64,7 +66,7 @@ def stats_detail(update: Update, context: CallbackContext) -> None:
                 + "----------"
             )
         text += (
-            "\n📊 <b>Estadísticas totales:</b>\n"
+            "\n📊<b>Estadísticas totales:</b>\n"
             + f"Input: {totals['input']}; Output: {totals['output']}\n"
             + f"Gasto: ${round(totals['cost'], 5)} USD"
         )
@@ -97,9 +99,11 @@ def stats(update: Update, context: CallbackContext) -> None:
         usage = data.AIRequests.get()
 
         usage_map = {}
+        users_map = {}
         for r in usage:
             if r["user_id"] not in usage_map:
                 usage_map[r["user_id"]] = 0
+            users_map[r["user_id"]] = r["username"]
             usage_map[r["user_id"]] += r["cost"]
             usage_map = dict(
                 sorted(
@@ -115,10 +119,10 @@ def stats(update: Update, context: CallbackContext) -> None:
         emoji = ["🥇", "🥈", "🥉"]
         for user_id, usage in usage_map.items():
             prefix = emoji[i - 1] if i <= 3 else f"#{i}. "
-            text += f"<b>{prefix}</b>Usuario {user_id}:\n" + f"${round(usage, 5)} USD\n"
+            text += f"<b>{prefix}{users_map[user_id]}</b>:\n" + f"${round(usage, 5)} USD\n"
             i += 1
         text += "----------"
-        text += "\n<b>Gasto total:</b>\n"
+        text += "\n💸<b>Gasto total:</b>\n"
         text += f"${round(sum(usage_map.values()), 5)} USD"
 
         send_long_message(

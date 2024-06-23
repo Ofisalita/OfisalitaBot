@@ -17,7 +17,7 @@ def init() -> None:
         "CREATE TABLE IF NOT EXISTS Messages (message_id INTEGER PRIMARY KEY, datetime INTEGER NOT NULL, user_id INTEGER NOT NULL, username VARCHAR(255), message TEXT NOT NULL, reply_to INTEGER);"
     )
     cur.execute(
-        "CREATE TABLE IF NOT EXISTS AIRequests (request_id INTEGER PRIMARY KEY, datetime INTEGER NOT NULL, user_id INTEGER NOT NULL, model TEXT NOT NULL, input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL, input_price_per_m FLOAT NOT NULL, output_price_per_m FLOAT NOT NULL, cost FLOAT NOT NULL);"
+        "CREATE TABLE IF NOT EXISTS AIRequests (request_id INTEGER PRIMARY KEY, datetime INTEGER NOT NULL, user_id INTEGER NOT NULL, username TEXT NOT NULL, model TEXT NOT NULL, input_tokens INTEGER NOT NULL, output_tokens INTEGER NOT NULL, input_price_per_m FLOAT NOT NULL, output_price_per_m FLOAT NOT NULL, cost FLOAT NOT NULL);"
     )
     logger.info("SQLite initialized")
 
@@ -138,6 +138,7 @@ class AIRequests:
     def add(
         datetime: int,
         user_id: int,
+        username: str,
         model: str,
         input_tokens: int,
         output_tokens: int,
@@ -151,10 +152,11 @@ class AIRequests:
         conn = connect()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO AIRequests (datetime, user_id, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO AIRequests (datetime, user_id, username, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 datetime,
                 user_id,
+                username,
                 model,
                 input_tokens,
                 output_tokens,
@@ -167,7 +169,7 @@ class AIRequests:
 
     @staticmethod
     def get(
-        user_id: int = None, datetime_from: int = None, datetime_to: int = None
+        user_id: int = None, username: str = None, datetime_from: int = None, datetime_to: int = None
     ) -> list[sqlite3.Row]:
         """
         Gets AI requests from the database.
@@ -181,6 +183,8 @@ class AIRequests:
         if user_id is not None:
             where.append("user_id = ?")
             params.append(user_id)
+        if username is not None:
+            where.append("username = ?")
         if datetime_from is not None:
             where.append("datetime >= ?")
             params.append(datetime_from)
@@ -189,5 +193,6 @@ class AIRequests:
             params.append(datetime_to)
         if where:
             query += " WHERE " + " AND ".join(where)
+        query += " ORDER BY datetime DESC"
         rows = cur.execute(query, params).fetchall()
         return rows
