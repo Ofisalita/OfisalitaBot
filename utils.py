@@ -1,10 +1,12 @@
 import random
 import re
-from string import ascii_lowercase
+import tiktoken
+from string import ascii_lowercase, ascii_uppercase
 
 from telegram import Update, Bot, TelegramError, constants as tg_constants
 from telegram.ext import CallbackContext
 
+import data
 from config.logger import logger
 
 word_file = "static/words.txt"
@@ -16,7 +18,7 @@ for character in ascii_lowercase:
 
 
 def _try_send(bot: Bot, attempts: int,
-              function: callable, error_message: str, **params) -> None:
+              function: callable, error_message: str, **params):
     """
     Make multiple attempts to send a message.
     """
@@ -24,7 +26,7 @@ def _try_send(bot: Bot, attempts: int,
     attempt = 1
     while attempt <= attempts:
         try:
-            function(**params)
+            ret = function(**params)
         except TelegramError as e:
             logger.error((
                 f"[Attempt {attempt}/{attempts}] {error_message} {chat_id} "
@@ -37,13 +39,25 @@ def _try_send(bot: Bot, attempts: int,
         logger.error((f"Max attempts reached for chat {str(chat_id)}."
                       "Aborting message and raising exception."))
 
+    return ret
+
 
 def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
     """
     Make multiple attempts to send a text message.
     """
     error_message = "Messaging chat"
-    _try_send(bot, attempts, bot.send_message, error_message, **params)
+    message = _try_send(bot, attempts, bot.send_message,
+                        error_message, **params)
+    if message:
+        data.Messages.add(
+            message.message_id,
+            message.date,
+            message.from_user.id,
+            message.from_user.username,
+            message.text,
+            message.reply_to_message.message_id if message.reply_to_message else None
+        )
 
 
 def try_edit(bot: Bot, attempts: int = 2, **params) -> None:
@@ -230,3 +244,75 @@ def guard_editable_bot_message(update: Update,
         return True
 
     return False
+
+
+def num_tokens_from_string(string: str, model: str) -> int:
+    """Returns the number of tokens in a text string."""
+    encoding = tiktoken.encoding_for_model(model)
+    num_tokens = len(encoding.encode(string))
+    return num_tokens
+
+
+def get_names_in_message(message: str) -> list[str]:
+    """
+    Returns a list of usernames in a message.
+    """
+    return re.findall(r"(?:\B|\/\w+)@(\w{5,32}\b)", message)
+
+
+def generate_aliases(names: list[str]) -> dict[str, str]:
+    """
+    Generates a dictionary associating usernames with aliases.
+    """
+    alias_dict = {}
+    for name in names:
+        if name not in alias_dict:
+            alias_type = "Persona" if not name.lower().endswith("bot") else "Bot"
+            alias = None
+            while alias is None or alias in alias_dict.values():
+                alias = f"{alias_type}{''.join([random.choice(ascii_uppercase) for _ in range(5)])}"
+            alias_dict[name] = alias
+    return alias_dict
+
+
+def get_alias_dict_from_string(text: str) -> dict[str, str]:
+    """
+    Returns a dictionary associating usernames mentioned in a string with aliases.
+    """
+    return generate_aliases(get_names_in_message(text))
+
+
+def get_alias_dict_from_messages_list(messages):
+    """
+    Returns a dictionary associating usernames from a list of messages with aliases.
+    Considers message authors and mentions.
+    """
+    names = []
+    for message in messages:
+        names.append(message["username"])
+        names += get_names_in_message(message["message"])
+    return generate_aliases(names)
+
+
+def anonymize(messages, alias_dict):
+    """
+    Anonymizes the usernames in a list of messages.
+    """
+    for message in messages:
+        if isinstance(message, str):
+            for username, alias in alias_dict.items():
+                message = message.replace(username, alias)
+        else:
+            for username, alias in alias_dict.items():
+                message["message"] = message["message"].replace(username, alias)
+            message["username"] = alias_dict[message["username"]]
+    return messages
+
+
+def deanonymize(generated_message, alias_dict):
+    """
+    Deanonymizes the usernames in a generated message
+    """
+    for username, alias in alias_dict.items():
+        generated_message = generated_message.replace(alias, username)
+    return generated_message

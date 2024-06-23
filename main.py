@@ -1,14 +1,15 @@
-from telegram.ext import CommandHandler, Filters
+from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 import data
 from bot import updater, dp
-from config.auth import admin_ids
+from config.auth import admin_ids, group_id, debug
 
 from commands.acronym import desiglar, siglar, glosario
 from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
+from commands.summary import resumir, button
 from commands.text import slashear, uwuspeech, repetir
 from commands.gpt import reply_gpt, reply_fill, desigliar
 
@@ -22,6 +23,30 @@ def add_command(command: str | list[str], callback: callable, **kwargs):
             dp.add_handler(CommandHandler(c, callback, **kwargs))
     else:
         dp.add_handler(CommandHandler(command, callback, **kwargs))
+
+
+def receive_message(update, context):
+    """
+    Receives a message and stores it in the database.
+    This doesn't receive messages from the bot itself.
+    """
+    author_id = update.message.from_user.id
+    author_username = update.message.from_user.username
+    if update.message.forward_from:
+        author_id = update.message.forward_from.id
+        author_username = update.message.forward_from.username
+    elif update.message.forward_sender_name:
+        author_id = 0
+        author_username = update.message.forward_sender_name
+    if update.message.text is not None:
+        data.Messages.add(
+            update.message.message_id,
+            update.message.date,
+            author_id,
+            author_username,
+            update.message.text,
+            update.message.reply_to_message.message_id if update.message.reply_to_message else None
+        )
 
 
 def main():
@@ -64,6 +89,20 @@ def main():
     add_command('gpt', reply_gpt)
     add_command('gb', reply_fill)
     add_command('desigliar', desigliar)
+
+    # Summary
+    add_command('resumir', resumir)
+
+    dp.add_handler(CallbackQueryHandler(button))
+
+    # Message handler to store messages in the database.
+    dp.add_handler(MessageHandler(
+        (Filters.text &
+         Filters.chat_type.group &
+         Filters.chat(chat_id=group_id))
+        if not debug else Filters.text,
+        receive_message),
+        group=1)  # Group must be != 0 so it doesn't conflict with command handlers.
 
     updater.start_polling()
     updater.idle()
