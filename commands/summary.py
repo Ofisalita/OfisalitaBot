@@ -109,7 +109,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             )
             result = chat_completion.choices[0].message.content
             result = deanonymize(result, alias_dict)
-            message_link = f"https://t.me/c/{str(update.message.chat_id)}/{update.message.reply_to_message.message_id}"
+            message_link = f"https://t.me/c/{str(update.message.chat_id).replace('-100','')}/{update.message.reply_to_message.message_id}"
             try:
                 try_msg(
                     context.bot,
@@ -255,8 +255,8 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         result = chat_completion.choices[0].message.content
         result = deanonymize(result, alias_dict)
 
-        start_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[0]['message_id']}"
-        end_message_link = f"https://t.me/c/{str(query.message.chat_id)[4:]}/{input_messages[-1]['message_id']}"
+        start_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[0]['message_id']}"
+        end_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
 
         final_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
