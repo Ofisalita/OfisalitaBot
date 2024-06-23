@@ -152,7 +152,7 @@ class AIRequests:
         conn = connect()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO AIRequests (datetime, user_id, username, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO AIRequests (datetime, user_id, username, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 datetime,
                 user_id,
