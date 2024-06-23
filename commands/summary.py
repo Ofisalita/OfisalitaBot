@@ -88,8 +88,13 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
             conversation=[GenAIMessage("user", prompt_text)],
         )
         result = deanonymize(response.message, alias_dict)
-        message_link = f"https://t.me/c/{str(update.message.chat_id)[4:]}/{update.message.reply_to_message.message_id}"
-        msg.reply_html(f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}')
+        message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{msg.reply_to_message.message_id}"
+        try:
+            msg.reply_html(
+                f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}'
+            )
+        except Exception:
+            msg.reply_markdown_v2(f"Resumen del [mensaje]({message_link}):\n\n{result}")
         return
 
     # Summarize N messages
@@ -202,19 +207,27 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
 
         result = deanonymize(response.message, alias_dict)
 
-        start_message_link = (
-            f"https://t.me/c/{str(msg.chat_id)[4:]}/{input_messages[0]['message_id']}"
-        )
-        end_message_link = (
-            f"https://t.me/c/{str(msg.chat_id)[4:]}/{input_messages[-1]['message_id']}"
-        )
-        msg.reply_html(
+        start_message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{input_messages[0]['message_id']}"
+        end_message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
+        final_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
             + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
             + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
-            + str(result),
-            reply_to_message_id=msg.reply_to_message.message_id,
+            + str(result)
         )
+        try:
+            msg.reply_html(
+                f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
+                + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
+                + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
+                + str(result),
+                reply_to_message_id=msg.reply_to_message.message_id,
+            )
+        except Exception:
+            msg.reply_markdown_v2(
+                final_message,
+                reply_to_message_id=msg.reply_to_message.message_id,
+            )
     except Exception as e:
         msg.reply_text(f"Ocurrió un error al procesar el resumen:\n{e}")
         raise e
