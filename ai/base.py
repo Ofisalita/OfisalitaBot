@@ -38,9 +38,10 @@ class GenAIResponse:
 
 
 class AbstractGenAIClient(ABC):
-    def __init__(self, model: str, user_id: int):
+    def __init__(self, model: str, user_id: int, username: str):
         self.model = model
         self.user_id = user_id
+        self.username = username
         self.api_key = None
         self.client = self.create_client()
 
@@ -63,6 +64,7 @@ class AbstractGenAIClient(ABC):
         AIRequests.add(
             datetime=response.datetime,
             user_id=self.user_id,
+            username=self.username,
             model=response.model,
             input_tokens=response.usage["input"],
             output_tokens=response.usage["output"],

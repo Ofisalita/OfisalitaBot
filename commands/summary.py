@@ -78,7 +78,9 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
 
     ai_model = cmd.opts.get("m") or cmd.opts.get("model") or DEFAULT_MODEL
 
-    client = ai_client(model=ai_model, user_id=msg.from_user.id)
+    client = ai_client(
+        model=ai_model, user_id=msg.from_user.id, username=msg.from_user.username
+    )
     # Summarize a specific single replied message
     if not cmd.arg and msg.reply_to_message:
         alias_dict = get_alias_dict_from_string(msg.reply_to_message.text)
@@ -178,6 +180,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         client = ai_client(
             model=ai_model,
             user_id=msg.reply_to_message.from_user.id,
+            username=msg.reply_to_message.from_user.username,
         )
         query_data = json.loads(query.data)
         n = query_data[1]

@@ -19,26 +19,26 @@ SUPPORTED_MODELS = {
 }
 
 
-def ai_client(model: str, user_id: int) -> AbstractGenAIClient:
+def ai_client(model: str, user_id: int, username: str) -> AbstractGenAIClient:
     # Find by specific model name
     # e.g. model = "claude-3-5-sonnet-20240620"
     for _brand in SUPPORTED_MODELS:
         for _model in SUPPORTED_MODELS[_brand]:
             if model == _model:
-                return get_client(_brand)(model, user_id)
+                return get_client(_brand)(model, user_id, username)
 
     # Find by model brand and get the latest version
     # e.g. model = "claude"
     for _brand in SUPPORTED_MODELS:
         if model == _brand:
-            return get_client(_brand)(SUPPORTED_MODELS[_brand][0], user_id)
+            return get_client(_brand)(SUPPORTED_MODELS[_brand][0], user_id, username)
 
     # Find by model name prefix
     # e.g. model = "claude-3-5-sonnet"
     for _brand in SUPPORTED_MODELS:
         for _model in SUPPORTED_MODELS[_brand]:
             if _model.startswith(model):
-                return get_client(_brand)(_model, user_id)
+                return get_client(_brand)(_model, user_id, username)
     
     raise ValueError(f"Model '{model}' not found")
 

@@ -152,7 +152,7 @@ class AIRequests:
         conn = connect()
         cur = conn.cursor()
         cur.execute(
-            "INSERT INTO AIRequests (datetime, user_id, username, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO AIRequests (datetime, user_id, username, model, input_tokens, output_tokens, input_price_per_m, output_price_per_m, cost) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
             [
                 datetime,
                 user_id,
@@ -169,7 +169,10 @@ class AIRequests:
 
     @staticmethod
     def get(
-        user_id: int = None, username: str = None, datetime_from: int = None, datetime_to: int = None
+        user_id: int = None,
+        username: str = None,
+        datetime_from: int = None,
+        datetime_to: int = None,
     ) -> list[sqlite3.Row]:
         """
         Gets AI requests from the database.
