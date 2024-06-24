@@ -98,7 +98,7 @@ def main():
     # Message handler to store messages in the database.
     dp.add_handler(MessageHandler(
         (Filters.text &
-         Filters.chat_type.group &
+         Filters.chat_type.groups &
          Filters.chat(chat_id=group_id))
         if not debug else Filters.text,
         receive_message),
