@@ -92,7 +92,7 @@ def main():
 
     # Summary
     add_command('resumir', resumir)
-    add_command(['noticia', 'quepaso'], noticia)
+    add_command(['noticia', 'noticias', 'quepaso'], noticia)
 
     dp.add_handler(CallbackQueryHandler(button))
 
