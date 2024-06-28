@@ -353,7 +353,7 @@ def noticia(update: Update, context: CallbackContext) -> None:
     result = chat_completion.choices[0].message.content
 
     url = source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
-    message = result + "\n\n" + f"⛲️ Fuente: <a href='{url}'>Google News</a>"
+    message = result + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
 
     try_msg(
         context.bot,
