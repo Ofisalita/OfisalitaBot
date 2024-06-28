@@ -1,11 +1,11 @@
-import requests
-import data
 import json
+from newspaper.google_news import GoogleNewsSource
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import CallbackContext
 from openai import OpenAI
 
+import data
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
 from utils import (
@@ -306,4 +306,70 @@ def button(update: Update, context: CallbackContext) -> None:
             )
             _do_resumir(query, context)
         elif query_data[0] == "cancel_summary":
-            query.edit_message_text(text=f"{query.message.text}\n\nResumen cancelado.")
+            query.edit_message_text(
+                text=f"{query.message.text}\n\nResumen cancelado.")
+
+
+@member_exclusive
+def noticia(update: Update, context: CallbackContext) -> None:
+    """
+    Summarizes a news article from Google News headlines.
+    """
+    try:
+        arg = get_arg(update)
+        if not arg:
+            return
+
+        source = GoogleNewsSource(
+            country="CL",
+            language="es",
+            max_results=10,
+        )
+        source.build(top_news=False, keyword=arg)
+
+        titles = [article.title for article in source.articles]
+
+        PROMPT_NEWS_HEADLINES = {
+            "role": "system",
+            "content": "Eres un bot para resumir titulares de noticias. "
+            + "Te daré varios titulares recientes y debes intentar inferir qué está pasando, de forma concisa, en no más de 1000 caracteres."
+            + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
+        }
+        client = OpenAI(api_key=openai_key)
+        chat_completion = client.chat.completions.create(
+            model=GPT_MODEL,
+            messages=[
+                PROMPT_NEWS_HEADLINES,
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "text",
+                            "text": "\n".join(titles)
+                        }
+                    ],
+                },
+            ],
+        )
+        result = chat_completion.choices[0].message.content
+
+        url = source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
+        message = result + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
+
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message,
+            reply_to_message_id=update.message.message_id,
+        )
+        return
+    except Exception as e:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text=f"Hubo un error al procesar: {e}",
+            reply_to_message_id=update.message.message_id,
+        )
+        raise e
+
