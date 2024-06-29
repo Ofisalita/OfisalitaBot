@@ -17,10 +17,12 @@ def slashear(update: Update, context: CallbackContext) -> None:
         response = "/" + words[0].lower()
         for word in words[1:]:
             response += word.capitalize()
-        try_msg(context.bot,
-                chat_id=update.message.chat_id,
-                parse_mode="HTML",
-                text=response)
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=response,
+        )
 
 
 @member_exclusive
@@ -33,19 +35,23 @@ def uwuspeech(update: Update, context: CallbackContext) -> None:
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    message = arg.replace('r', 'w') \
-        .replace('l', 'w') \
-        .replace('k', 'c') \
-        .replace('p', 'pw') \
-        .replace('R', 'W') \
-        .replace('L', 'W') \
-        .replace('K', 'C') \
-        .replace('P', 'PW')
+    message = (
+        arg.replace("r", "w")
+        .replace("l", "w")
+        .replace("k", "c")
+        .replace("p", "pw")
+        .replace("R", "W")
+        .replace("L", "W")
+        .replace("K", "C")
+        .replace("P", "PW")
+    )
 
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=message)
+    try_msg(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        text=message,
+    )
 
 
 @member_exclusive
@@ -58,10 +64,12 @@ def repetir(update: Update, context: CallbackContext) -> None:
     if update.message.reply_to_message and not arg:
         arg = update.message.reply_to_message.text
 
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=arg)
+    try_msg(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        text=arg,
+    )
 
 
 @member_exclusive
@@ -75,15 +83,16 @@ def distancia(update: Update, context: CallbackContext) -> None:
 
     if not update.message.reply_to_message:
         return
-    
+
     reply_id = update.message.reply_to_message.message_id
 
     answer = str(message_id - reply_id)
     mensaje_s = "mensajes" if answer != "1" else "mensaje"
 
-    try_msg(context.bot,
-            chat_id=update.message.chat_id,
-            parse_mode="HTML",
-            text=f"↑ Se mandó hace {answer} {mensaje_s}.",
-            reply_to_message_id=reply_id
-            )
+    try_msg(
+        context.bot,
+        chat_id=update.message.chat_id,
+        parse_mode="HTML",
+        text=f"↑ Se mandó hace {answer} {mensaje_s}.",
+        reply_to_message_id=reply_id,
+    )
