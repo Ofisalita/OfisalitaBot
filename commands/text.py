@@ -93,6 +93,6 @@ def distancia(update: Update, context: CallbackContext) -> None:
         context.bot,
         chat_id=update.message.chat_id,
         parse_mode="HTML",
-        text=f"↑ Se mandó hace {answer} {mensaje_s}.",
-        reply_to_message_id=reply_id,
+        text=f"{answer} {mensaje_s}",
+        reply_to_message_id=message_id,
     )
