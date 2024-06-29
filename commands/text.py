@@ -62,3 +62,28 @@ def repetir(update: Update, context: CallbackContext) -> None:
             chat_id=update.message.chat_id,
             parse_mode="HTML",
             text=arg)
+
+
+@member_exclusive
+def distancia(update: Update, context: CallbackContext) -> None:
+    """
+    Counts the distance between the current message and the message being replied to
+    """
+    log_command(update)
+
+    message_id = update.message.message_id
+
+    if not update.message.reply_to_message:
+        return
+    
+    reply_id = update.message.reply_to_message.message_id
+
+    answer = str(message_id - reply_id)
+    mensaje_s = "mensajes" if answer != "1" else "mensaje"
+
+    try_msg(context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=f"↑ Se mandó hace {answer} {mensaje_s}.",
+            reply_to_message_id=reply_id
+            )
