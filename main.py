@@ -10,7 +10,7 @@ from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.summary import resumir, noticia, button
-from commands.text import slashear, uwuspeech, repetir, distance
+from commands.text import slashear, uwuspeech, repetir, distancia
 from commands.gpt import reply_gpt, reply_fill, desigliar
 
 
@@ -77,7 +77,7 @@ def main():
     add_command(['uwuspeech', 'uwuspeak', 'uwuizar', 'uwu'], uwuspeech)
     add_command('slashear', slashear)
     add_command('repetir', repetir)
-    add_command('distancia', distance)
+    add_command('distancia', distancia)
 
     # Response
     add_command('tup', tup)
