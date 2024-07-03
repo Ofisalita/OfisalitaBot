@@ -139,6 +139,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
                 text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
                 reply_to_message_id=update.message.message_id,
             )
+       	    return
 
         if n and n > MAX_MESSAGES_TO_SUMMARIZE:
             try_msg(
