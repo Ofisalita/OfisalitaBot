@@ -61,7 +61,7 @@ def intro() -> str:
     ]
    return choice(gm)+"\n"+choice(presentation)+"\n"
 
-def weather_emoji(mnTemp,mxTemp,prec) -> str:
+def weather_emoji(mnTemp: str, mxTemp: str, prec: int) -> str:
     """
     Calculates an apropiate emoji for the given weather
     """
@@ -78,7 +78,7 @@ def weather_emoji(mnTemp,mxTemp,prec) -> str:
     else:
         return "☀️"
 
-def prec_msg(yest,today) -> str:
+def prec_msg(yest: int, today: int) -> str:
     if yest == 0 and today == 0:
         return ""
     elif today == 0:
