@@ -178,4 +178,17 @@ def enable_weather(update: Update, context: CallbackContext) -> None:
     """
     Enables the weather forecast everyday
     """
-    context.job_queue.run_daily(weather, time=time(hour=7, minute=0, tzinfo=pytz.timezone('America/Santiago')), context=update.message.chat_id)
+    jobs = context.job_queue.get_jobs_by_name("weather_report")
+    if jobs:
+        for job in jobs:
+            job.schedule_removal()
+        try_msg(context.bot,
+                chat_id=update.message.chat_id,
+                parse_mode="markdown",
+                text="Los reportes fueron deshabilitados!")
+    else:
+        context.job_queue.run_daily(weather, time=time(hour=7, minute=0, tzinfo=pytz.timezone('America/Santiago')), context=update.message.chat_id, name="weather_report")
+        try_msg(context.bot,
+                chat_id=update.message.chat_id,
+                parse_mode="markdown",
+                text="Los reportes fueron habilitados!")
