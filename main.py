@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 import data
+
 from bot import updater, dp
 from config.auth import admin_ids, group_id, debug
 
@@ -12,6 +13,7 @@ from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.summary import resumir, noticia, button
 from commands.text import slashear, uwuspeech, repetir, distancia
 from commands.gpt import reply_gpt, reply_fill, desigliar
+from commands.weather import weather, enable_weather
 
 
 def add_command(command: str | list[str], callback: callable, **kwargs):
@@ -95,6 +97,9 @@ def main():
     add_command('resumir', resumir)
     add_command(['noticia', 'noticias', 'quepaso'], noticia)
 
+    # Weather
+    add_command('habilitar_clima', enable_weather)
+
     dp.add_handler(CallbackQueryHandler(button))
 
     # Message handler to store messages in the database.
@@ -105,6 +110,7 @@ def main():
         if not debug else Filters.text,
         receive_message),
         group=1)  # Group must be != 0 so it doesn't conflict with command handlers.
+
 
     updater.start_polling()
     updater.idle()
