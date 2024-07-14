@@ -32,6 +32,7 @@ Los comandos ya establecidos tienen el decorador `@member_exclusive` que se enca
   - `list.py`: Comandos relacionados a listas de cosas.
   - `response.py`: Comandos relacionados a responder a ciertos mensajes.
   - `text.py`: Comandos relacionados a alterar texto.
+  - `weather.py`: Comandos de predicción del clima.
 - `data.py`: Define las funciones para interactuar con SQLite.
 - `bot.py`: Contiene el [Updater](https://python-telegram-bot.readthedocs.io/en/stable/telegram.ext.updater.html) que controla el bot y variables relacionadas.
 - `functions.py`: Funciones auxiliares complejas y específicas de cierta funcionalidad. e.g. load/save de data, web querying, scrappers, etc.
@@ -90,6 +91,12 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 - `/gpt [text | reply]` - Genera una respuesta al texto del argumento. Usa el modelo Anthropic Claude Sonnet.
 - `/gb [text | reply]` - Rellena los guiones bajos del texto del argumento, usando el modelo Anthropic Claude Sonnet. A veces cambia un poco el texto original.
 - `/desigliar [text | reply]` - Inventa una desiglación para una sigla usando el modelo Anthropic Claude Sonnet.
+
+### Clima
+
+Esta funcionalidad compara el clima de ayer con el de hoy, enviando un reporte diario a una hora fija.
+
+- `/habilitar_clima` - Habilita/Deshabilita los reportes del clima.
 
 ### Admin
 
