@@ -142,8 +142,8 @@ def forecast() -> None:
     temp = data["hourly"]["temperature_2m"]
     prec = data["hourly"]["precipitation"]
 
-    i = 7
-    f = 22
+    i = 7 # hora de inicio ventana de interés
+    f = 22 # hora de fin ventana de interés
 
     mnYest = str(round(min(temp[i:f])))
     mxYest = str(round(max(temp[i:f])))
