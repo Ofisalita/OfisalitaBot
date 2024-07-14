@@ -79,6 +79,9 @@ def weather_emoji(mnTemp: str, mxTemp: str, prec: int) -> str:
         return "☀️"
 
 def prec_msg(yest: int, today: int) -> str:
+    """
+    Generates a precipitation forecast string
+    """
     if yest == 0 and today == 0:
         return ""
     elif today == 0:
