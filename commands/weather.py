@@ -36,7 +36,7 @@ def intro() -> str:
             "/buenosdias@ofipapinhos",
             "yoyoyo what's up GAMERS?👾?🎮?",
             "Bom dia",
-            "La vida es más dulce si le sonries... Buenos días"
+            "La vida es más dulce si le sonries... Buenos días",
             "Comienza tu día declarando DIOS TIENE COSAS BUENAS PARA MI!!!",
             "bdoct",
             "saludos a todxs los valientes que ya se levantaron",
