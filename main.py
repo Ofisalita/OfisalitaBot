@@ -1,6 +1,7 @@
 from telegram.ext import CommandHandler, MessageHandler, Filters, CallbackQueryHandler
 
 import data
+
 from bot import updater, dp
 from config.auth import admin_ids, group_id, debug
 
@@ -9,10 +10,11 @@ from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
 from commands.response import start, tup, gracias, weekly_poll, reply_hello
-from commands.summary import resumir, button
-from commands.text import slashear, uwuspeech, repetir
+from commands.summary import resumir, noticia, button
+from commands.text import slashear, uwuspeech, repetir, distancia
 from commands.gpt import reply_gpt, reply_fill, desigliar
 from commands.stats import stats, stats_detail
+from commands.weather import weather, enable_weather
 
 
 def add_command(command: str | list[str], callback: callable, **kwargs):
@@ -78,6 +80,7 @@ def main():
     add_command(['uwuspeech', 'uwuspeak', 'uwuizar', 'uwu'], uwuspeech)
     add_command('slashear', slashear)
     add_command('repetir', repetir)
+    add_command('distancia', distancia)
 
     # Response
     add_command('tup', tup)
@@ -93,6 +96,10 @@ def main():
 
     # Summary
     add_command('resumir', resumir)
+    add_command(['noticia', 'noticias', 'quepaso'], noticia)
+
+    # Weather
+    add_command('habilitar_clima', enable_weather)
 
     # Stats
     add_command('stats', stats)
@@ -103,11 +110,12 @@ def main():
     # Message handler to store messages in the database.
     dp.add_handler(MessageHandler(
         (Filters.text &
-         Filters.chat_type.group &
+         Filters.chat_type.groups &
          Filters.chat(chat_id=group_id))
         if not debug else Filters.text,
         receive_message),
         group=1)  # Group must be != 0 so it doesn't conflict with command handlers.
+
 
     updater.start_polling()
     updater.idle()

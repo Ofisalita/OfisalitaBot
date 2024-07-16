@@ -1,5 +1,6 @@
 import data
 import json
+from newspaper.google_news import GoogleNewsSource
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import CallbackContext
@@ -7,7 +8,7 @@ from telegram.ext import CallbackContext
 from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
-from commands.decorators import group_exclusive
+from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
 from utils import (
     try_msg,
@@ -124,6 +125,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
                 text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
                 reply_to_message_id=update.message.message_id,
             )
+            return
 
         if n and n > MAX_MESSAGES_TO_SUMMARIZE:
             try_msg(
@@ -288,3 +290,62 @@ def button(update: Update, context: CallbackContext) -> None:
             _do_resumir(query, context)
         elif query_data[0] == "cancel_summary":
             query.edit_message_text(text=f"{query.message.text}\n\nResumen cancelado.")
+
+
+@member_exclusive
+def noticia(update: Update, context: CallbackContext) -> None:
+    """
+    Summarizes a news article from Google News headlines.
+    """
+    try:
+        arg = get_arg(update)
+        if not arg:
+            return
+
+        source = GoogleNewsSource(
+            country="CL",
+            language="es",
+            max_results=10,
+        )
+        source.build(top_news=False, keyword=arg)
+
+        titles = [article.title for article in source.articles]
+
+        PROMPT_NEWS_HEADLINES = (
+            "Eres un bot para resumir titulares de noticias. "
+            + "Te daré varios titulares recientes y debes intentar inferir qué está pasando, de forma concisa, en no más de 1000 caracteres."
+            + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
+        )
+
+        client = ai_client(
+            model=AI_MODEL,
+            user_id=update.message.from_user.id,
+            username=update.message.from_user.username,
+        )
+
+        result = client.generate(
+            system=PROMPT_NEWS_HEADLINES,
+            conversation=[GenAIMessage("user", "\n".join(titles))],
+        )
+
+        url = (
+            source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
+        )
+        message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
+
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            parse_mode="HTML",
+            text=message,
+            reply_to_message_id=update.message.message_id,
+        )
+        return
+    except Exception as e:
+        try_msg(
+            context.bot,
+            chat_id=update.message.chat_id,
+            text=f"Hubo un error al procesar: {e}",
+            reply_to_message_id=update.message.message_id,
+        )
+        raise e
