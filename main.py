@@ -5,7 +5,7 @@ import data
 from bot import updater, dp
 from config.auth import admin_ids, group_id, debug
 
-from commands.acronym import desiglar, siglar, glosario
+from commands.acronym import desiglar, siglar, glosario, confirm_siglar
 from commands.admin import get_log, prohibir
 from commands.counter import contador, sumar, restar
 from commands.list import lista, agregar, quitar, editar, deslistar
@@ -57,6 +57,7 @@ def main():
     # Acronym
     add_command('desiglar', desiglar)
     add_command('siglar', siglar)
+    dp.add_handler(CallbackQueryHandler(confirm_siglar, pattern='siglar: .*'))
     add_command('glosario', glosario)
 
     # Admin
