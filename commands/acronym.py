@@ -41,7 +41,6 @@ def confirm_siglar(update: Update, context: CallbackContext) -> None:
         response = "La sigla anterior se mantuvo"
     else:
         arg = re.search(r"(.*) reemplazaría a .*, ¿deseas siglar igual\?", query.message.text).group(1)
-        print(arg)
         acronym = generate_acronym(arg)
         data.Acronyms.set(acronym, arg)
         response = acronym
