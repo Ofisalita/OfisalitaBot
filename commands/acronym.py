@@ -3,6 +3,7 @@ from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import data
+import re
 from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg, reverse_acronym, \
@@ -35,11 +36,12 @@ def confirm_siglar(update: Update, context: CallbackContext) -> None:
     """
     query = update.callback_query
     query.answer()
-    arg = query.data.split(": ")[1]
 
-    if arg == "":
+    if query.data == "siglar:no":
         response = "La sigla anterior se mantuvo"
     else:
+        arg = re.search(r"(.*) reemplazaría a .*, ¿deseas siglar igual\?", query.message.text).group(1)
+        print(arg)
         acronym = generate_acronym(arg)
         data.Acronyms.set(acronym, arg)
         response = acronym
@@ -63,13 +65,13 @@ def siglar(update: Update, context: CallbackContext) -> None:
     if old_acronym is not None and old_acronym != arg:
         keyboard = [
                         [
-                            InlineKeyboardButton("Si 👍", callback_data="siglar: "+arg),
-                            InlineKeyboardButton("¡No! 😱", callback_data="siglar: ")
+                            InlineKeyboardButton("Si 👍", callback_data="siglar:si"),
+                            InlineKeyboardButton("¡No! 😱", callback_data="siglar:no")
                         ]
                    ]
         reply_markup = InlineKeyboardMarkup(keyboard)
         update.message.reply_text(
-                "Reemplazaría a <i>"+old_acronym+"</i>, ¿deseas siglar igual?",
+                "<i>"+arg+"</i> reemplazaría a <i>"+old_acronym+"</i>, ¿deseas siglar igual?",
                 reply_markup=reply_markup,
                 parse_mode="HTML")
         return

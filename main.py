@@ -57,7 +57,7 @@ def main():
     # Acronym
     add_command('desiglar', desiglar)
     add_command('siglar', siglar)
-    dp.add_handler(CallbackQueryHandler(confirm_siglar, pattern='siglar: .*'))
+    dp.add_handler(CallbackQueryHandler(confirm_siglar, pattern='siglar:.*'))
     add_command('glosario', glosario)
 
     # Admin
