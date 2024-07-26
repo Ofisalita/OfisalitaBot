@@ -7,6 +7,7 @@ from ai.anthropic import ClaudeClient
 
 SUPPORTED_MODELS = {
     "openai": {
+        "alias": ["gpt"],
         "client": GPTClient,
         "models": [
             "gpt-4o",
@@ -16,6 +17,7 @@ SUPPORTED_MODELS = {
         ],
     },
     "anthropic": {
+        "alias": ["claude"],
         "client": ClaudeClient,
         "models": [
             "claude-3-5-sonnet-20240620",
@@ -38,10 +40,10 @@ def ai_client(
             if model == _model:
                 return SUPPORTED_MODELS[_brand]["client"](model, update, query)
 
-    # Find by model brand and get the latest version
+    # Find by model brand or alias and get the latest version
     # e.g. model = "claude"
     for _brand in SUPPORTED_MODELS:
-        if model == _brand:
+        if model == _brand or model in SUPPORTED_MODELS[_brand]["alias"]:
             return SUPPORTED_MODELS[_brand]["client"](
                 SUPPORTED_MODELS[_brand][0], update, query
             )
