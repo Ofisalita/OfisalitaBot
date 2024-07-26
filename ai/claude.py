@@ -17,7 +17,7 @@ class ClaudeGPTClient(AbstractGenAIClient):
         return Anthropic(api_key=self.api_key)
 
     def generate(
-        self, conversation: list[GenAIMessage], system: str = None, **kwargs
+        self, conversation: list[GenAIMessage], system: str = "", **kwargs
     ) -> GenAIResponse:
         max_tokens = kwargs.pop("max_tokens", 4096)
         request = self.client.messages.create(

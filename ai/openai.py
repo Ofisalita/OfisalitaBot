@@ -18,10 +18,10 @@ class OpenAIGPTClient(AbstractGenAIClient):
     def generate(
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
+        system_message = [{"role": "system", "content": system}] if system else []
         request = self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "system", "content": system}]
-            + [msg.to_dict() for msg in conversation],
+            messages=system_message + [msg.to_dict() for msg in conversation],
             **kwargs
         )
         response = self.parse_response(request)
