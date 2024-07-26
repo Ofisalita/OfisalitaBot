@@ -1,8 +1,9 @@
-from telegram import Update, ParseMode, constants
+from telegram import Update, ParseMode, constants, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 from telegram.utils.helpers import escape_markdown
 
 import data
+import re
 from commands.decorators import member_exclusive
 from config.logger import log_command
 from utils import get_arg, try_msg, reverse_acronym, \
@@ -29,6 +30,22 @@ def desiglar(update: Update, context: CallbackContext) -> None:
             parse_mode="HTML",
             text=message)
 
+def confirm_siglar(update: Update, context: CallbackContext) -> None:
+    """
+    Result of confirm button to over-write an acronym
+    """
+    query = update.callback_query
+    query.answer()
+
+    if query.data == "siglar:no":
+        response = "La sigla anterior se mantuvo"
+    else:
+        arg = re.search(r"(.*) reemplazaría a .*, ¿deseas siglar igual\?", query.message.text).group(1)
+        acronym = generate_acronym(arg)
+        data.Acronyms.set(acronym, arg)
+        response = acronym
+
+    query.edit_message_text(text=response, parse_mode="HTML")
 
 @member_exclusive
 def siglar(update: Update, context: CallbackContext) -> None:
@@ -41,12 +58,26 @@ def siglar(update: Update, context: CallbackContext) -> None:
         arg = update.message.reply_to_message.text
 
     acronym = generate_acronym(arg)
+    old_acronym = data.Acronyms.get(acronym)
 
-    old_acronym = data.Acronyms.set(acronym, arg)
-
-    message = acronym
-    if old_acronym is not None:
-        message += f"\n<i>(Reemplaza '{old_acronym}')</i>"
+    message = acronym 
+    if old_acronym is not None and old_acronym != arg:
+        keyboard = [
+                        [
+                            InlineKeyboardButton("Si 👍", callback_data="siglar:si"),
+                            InlineKeyboardButton("¡No! 😱", callback_data="siglar:no")
+                        ]
+                   ]
+        reply_markup = InlineKeyboardMarkup(keyboard)
+        update.message.reply_text(
+                "<i>"+arg+"</i> reemplazaría a <i>"+old_acronym+"</i>, ¿deseas siglar igual?",
+                reply_markup=reply_markup,
+                parse_mode="HTML")
+        return
+    elif old_acronym == arg:
+        message = "eypuv (ya se sigló una vez)"
+    else:
+        data.Acronyms.set(acronym, arg)
 
     try_msg(context.bot,
             chat_id=update.message.chat_id,
