@@ -8,7 +8,7 @@ except ImportError:
     openai_key = None
 
 
-class OpenAIGPTClient(AbstractGenAIClient):
+class GPTClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = openai_key
         if self.api_key is None:

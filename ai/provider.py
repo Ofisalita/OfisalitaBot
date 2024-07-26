@@ -2,12 +2,12 @@ from telegram import Update, CallbackQuery
 from typing import Optional
 
 from ai.base import AbstractGenAIClient
-from ai.openai import OpenAIGPTClient
-from ai.claude import ClaudeGPTClient
+from ai.openai import GPTClient
+from ai.anthropic import ClaudeClient
 
 SUPPORTED_MODELS = {
     "openai": {
-        "client": OpenAIGPTClient,
+        "client": GPTClient,
         "models": [
             "gpt-4o",
             "gpt-4o-2024-05-13",
@@ -15,8 +15,8 @@ SUPPORTED_MODELS = {
             "gpt-3.5-turbo-instruct",
         ],
     },
-    "claude": {
-        "client": ClaudeGPTClient,
+    "anthropic": {
+        "client": ClaudeClient,
         "models": [
             "claude-3-5-sonnet-20240620",
             "claude-3-5-sonnet-20240229",

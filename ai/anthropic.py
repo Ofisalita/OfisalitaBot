@@ -9,7 +9,7 @@ except ImportError:
     claude_key = None
 
 
-class ClaudeGPTClient(AbstractGenAIClient):
+class ClaudeClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = claude_key
         if self.api_key is None:
