@@ -9,6 +9,7 @@ from telegram.ext import CallbackContext
 from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
+from ai.models import RESUMIR_MODEL, QUEPASO_MODEL
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
 from utils import (
@@ -26,7 +27,6 @@ try:
 except ImportError:
     openai_key = None
 
-AI_MODEL = "claude-3-5-sonnet"
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
 PROMPT_SYSTEM_MESSAGE_SINGLE = (
@@ -78,7 +78,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
     try:
-        client = ai_client(AI_MODEL, update)
+        client = ai_client(RESUMIR_MODEL, update)
         # Summarize a specific single replied message
         if not get_arg(update) and update.message.reply_to_message:
             alias_dict = get_alias_dict_from_string(
@@ -165,7 +165,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             },
         ]
 
-        input_tokens = num_tokens_from_string(str(prompt_messages), AI_MODEL)
+        input_tokens = num_tokens_from_string(str(prompt_messages), RESUMIR_MODEL)
         # Based on real usage data
         expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
@@ -173,7 +173,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
             context.bot,
             chat_id=update.message.chat_id,
             parse_mode="HTML",
-            text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(AI_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
+            text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(RESUMIR_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
             reply_to_message_id=update.message.message_id,
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -203,7 +203,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
 
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     try:
-        client = ai_client(AI_MODEL, query=query)
+        client = ai_client(RESUMIR_MODEL, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
         summarize_from = query_data[2]
@@ -223,7 +223,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        input_tokens = num_tokens_from_string(str(input_messages), AI_MODEL)
+        input_tokens = num_tokens_from_string(str(input_messages), RESUMIR_MODEL)
 
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
@@ -310,7 +310,7 @@ def noticia(update: Update, context: CallbackContext) -> None:
             + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
         )
 
-        client = ai_client(AI_MODEL, update)
+        client = ai_client(QUEPASO_MODEL, update)
 
         result = client.generate(
             system=PROMPT_NEWS_HEADLINES,
