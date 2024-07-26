@@ -78,11 +78,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
     try:
-        client = ai_client(
-            model=AI_MODEL,
-            user_id=update.message.from_user.id,
-            username=update.message.from_user.username,
-        )
+        client = ai_client(AI_MODEL, update)
         # Summarize a specific single replied message
         if not get_arg(update) and update.message.reply_to_message:
             alias_dict = get_alias_dict_from_string(
@@ -207,11 +203,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
 
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     try:
-        client = ai_client(
-            model=AI_MODEL,
-            user_id=query.message.reply_to_message.from_user.id,
-            username=query.message.reply_to_message.from_user.username,
-        )
+        client = ai_client(AI_MODEL, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
         summarize_from = query_data[2]
@@ -318,11 +310,7 @@ def noticia(update: Update, context: CallbackContext) -> None:
             + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
         )
 
-        client = ai_client(
-            model=AI_MODEL,
-            user_id=update.message.from_user.id,
-            username=update.message.from_user.username,
-        )
+        client = ai_client(AI_MODEL, update)
 
         result = client.generate(
             system=PROMPT_NEWS_HEADLINES,
