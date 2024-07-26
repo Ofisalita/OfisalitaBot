@@ -236,8 +236,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         end_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
         final_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
-            + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
-            + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
+            + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n\n"
             + str(result)
         )
         try:
