@@ -1,5 +1,6 @@
 import data
 import json
+import math
 from newspaper.google_news import GoogleNewsSource
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
@@ -169,8 +170,8 @@ def resumir(update: Update, context: CallbackContext) -> None:
         ]
 
         input_tokens = num_tokens_from_string(str(prompt_messages), AI_MODEL)
-        # TODO: Calculate this based on the input messages
-        expected_output_tokens = 300
+        # Based on real usage data
+        expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
         try_msg(
             context.bot,
