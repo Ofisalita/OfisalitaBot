@@ -26,7 +26,7 @@ try:
 except ImportError:
     openai_key = None
 
-AI_MODEL = "claude-3-sonnet-20240229"
+AI_MODEL = "claude-3-5-sonnet"
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
 PROMPT_SYSTEM_MESSAGE_SINGLE = (
