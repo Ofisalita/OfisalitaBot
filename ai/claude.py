@@ -19,9 +19,7 @@ class ClaudeGPTClient(AbstractGenAIClient):
     def generate(
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
-        max_tokens = kwargs.pop(
-            "max_tokens", 8192 if self.model.startswith("claude-3-5-sonnet") else 4096
-        )
+        max_tokens = kwargs.pop("max_tokens", 4096)
         request = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
