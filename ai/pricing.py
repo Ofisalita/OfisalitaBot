@@ -19,7 +19,7 @@ def get_model_pricing(model: str) -> dict:
         for key in PRICING_PER_M_TOKENS:
             if model.startswith(key):
                 return PRICING_PER_M_TOKENS[key]
-    return {"input": 0, "output": 0}
+    raise ValueError(f"Pricing for model '{model}' not found")
 
 
 def get_input_cost(model: str, input_tokens: int) -> float:
