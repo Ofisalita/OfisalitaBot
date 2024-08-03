@@ -13,6 +13,7 @@ from commands.response import start, tup, gracias, weekly_poll, reply_hello
 from commands.summary import resumir, noticia, button
 from commands.text import slashear, uwuspeech, repetir, distancia
 from commands.gpt import reply_gpt, reply_fill, desigliar
+from commands.stats import stats, stats_detail
 from commands.weather import weather, enable_weather
 
 
@@ -100,6 +101,10 @@ def main():
 
     # Weather
     add_command('habilitar_clima', enable_weather)
+
+    # Stats
+    add_command('stats', stats)
+    add_command('stats_detail', stats_detail)
 
     dp.add_handler(CallbackQueryHandler(button))
 

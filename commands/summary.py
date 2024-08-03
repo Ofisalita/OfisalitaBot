@@ -1,11 +1,15 @@
+import data
 import json
+import math
 from newspaper.google_news import GoogleNewsSource
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import CallbackContext
-from openai import OpenAI
 
-import data
+from ai.provider import ai_client
+from ai.base import GenAIMessage
+import ai.pricing as prc
+from ai.models import RESUMIR_MODEL, QUEPASO_MODEL
 from commands.decorators import group_exclusive, member_exclusive
 from config.logger import log_command
 from utils import (
@@ -23,24 +27,16 @@ try:
 except ImportError:
     openai_key = None
 
-GPT_MODEL = "gpt-4o"
-GPT_PRICING_PER_TOKEN = {  # https://openai.com/api/pricing/
-    "gpt-4o": {"input": 0.000005, "output": 0.000015},
-    "gpt-3.5-turbo-0125": {"input": 0.0000005, "output": 0.000015},
-    "gpt-3.5-turbo-instruct": {"input": 0.0000015, "output": 0.000020},
-}
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
-PROMPT_SYSTEM_MESSAGE_SINGLE = {
-    "role": "system",
-    "content": "Eres un bot para resumir mensajes de un chat. "
+PROMPT_SYSTEM_MESSAGE_SINGLE = (
+    "Eres un bot para resumir mensajes de un chat. "
     + "Te daré un mensaje y debes resumirlo de forma concisa. No incluyas nada más que el resumen en tu mensaje. "
-    + "Utiliza SOLO las etiquetas HTML <b> y <i> para los formatos de <b>negritas</b> e <i>itálicas</i>, NO uses ninguna otra etiqueta HTML.",
-}
+    + "Utiliza HTML para los formatos de <b>negritas</b> e <i>itálicas</i>, NO uses otras etiquetas aparte de <b> y <i>. NO uses Markdown."
+)
 
-PROMPT_SYSTEM_MESSAGE_MULTIPLE = {
-    "role": "system",
-    "content": "Eres un bot para resumir mensajes de un chat. "
+PROMPT_SYSTEM_MESSAGE_MULTIPLE = (
+    "Eres un bot para resumir mensajes de un chat. "
     + "Te daré una lista de mensajes en el siguiente formato:\n"
     + "(message_id, username, message, reply_to)\n"
     + "\n"
@@ -63,7 +59,7 @@ PROMPT_SYSTEM_MESSAGE_MULTIPLE = {
     + "(126, 24587, 'usuario2', 'ogh que paja, me carga la pap', None),"
     + "(127, 87562, 'usuario3', 'wena cabros descubrí un framework de js se llama TupJS', None),"
     + "(128, 24587, 'usuario2', 'uuu si lo cacho, apaña caleta pero me gusta más BebJS', 127),"
-    + "(129, 34924, 'usuario1', 'que chucha están hablando', None),"
+    + "(129, 34924, 'usuario1', 'que chucha están hablando', None)]"
     + "OUTPUT:\n"
     + "<b>Baloian estaba tomando pap</b>\n"
     + "- usuario1 lo vio.\n"
@@ -71,8 +67,8 @@ PROMPT_SYSTEM_MESSAGE_MULTIPLE = {
     + "<b>Conversación sobre frameworks de JS</b>\n"
     + "- usuario3 descubre TupJS.\n"
     + "- usuario2 prefiere BebJS.\n"
-    + "- usuario1 no entiende del tema.\n",
-}
+    + "- usuario1 no entiende del tema.\n"
+)
 
 
 @group_exclusive
@@ -82,8 +78,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
     try:
-        client = OpenAI(api_key=openai_key)
-
+        client = ai_client(RESUMIR_MODEL, update)
         # Summarize a specific single replied message
         if not get_arg(update) and update.message.reply_to_message:
             alias_dict = get_alias_dict_from_string(
@@ -92,23 +87,11 @@ def resumir(update: Update, context: CallbackContext) -> None:
             prompt_text = anonymize([update.message.reply_to_message.text], alias_dict)[
                 0
             ]
-            chat_completion = client.chat.completions.create(
-                model=GPT_MODEL,
-                messages=[
-                    PROMPT_SYSTEM_MESSAGE_SINGLE,
-                    {
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "text",
-                                "text": prompt_text,
-                            }
-                        ],
-                    },
-                ],
+            response = client.generate(
+                system=PROMPT_SYSTEM_MESSAGE_SINGLE,
+                conversation=[GenAIMessage("user", prompt_text)],
             )
-            result = chat_completion.choices[0].message.content
-            result = deanonymize(result, alias_dict)
+            result = deanonymize(response.message, alias_dict)
             message_link = f"https://t.me/c/{str(update.message.chat_id).replace('-100','')}/{update.message.reply_to_message.message_id}"
             try:
                 try_msg(
@@ -139,7 +122,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
                 text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
                 reply_to_message_id=update.message.message_id,
             )
-       	    return
+            return
 
         if n and n > MAX_MESSAGES_TO_SUMMARIZE:
             try_msg(
@@ -182,14 +165,15 @@ def resumir(update: Update, context: CallbackContext) -> None:
             },
         ]
 
-        prompt_tokens = num_tokens_from_string(str(prompt_messages), GPT_MODEL)
-        # TODO: Calculate this based on the input messages
-        expected_completion_tokens = 300
+        input_tokens = num_tokens_from_string(str(prompt_messages), RESUMIR_MODEL)
+        # Based on real usage data
+        expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
         try_msg(
             context.bot,
             chat_id=update.message.chat_id,
-            text=f"El resumen de {len(input_messages)} mensajes costará aproximadamente ${round(prompt_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['input'] + expected_completion_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['output'], 5)} USD\n",
+            parse_mode="HTML",
+            text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(RESUMIR_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n",
             reply_to_message_id=update.message.message_id,
             reply_markup=InlineKeyboardMarkup(
                 [
@@ -219,7 +203,7 @@ def resumir(update: Update, context: CallbackContext) -> None:
 
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     try:
-        client = OpenAI(api_key=openai_key)
+        client = ai_client(RESUMIR_MODEL, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
         summarize_from = query_data[2]
@@ -239,30 +223,20 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        prompt_messages = [
-            PROMPT_SYSTEM_MESSAGE_MULTIPLE,
-            {
-                "role": "user",
-                "content": [{"type": "text", "text": str(input_messages)}],
-            },
-        ]
+        input_tokens = num_tokens_from_string(str(input_messages), RESUMIR_MODEL)
 
-        input_tokens = num_tokens_from_string(str(input_messages), GPT_MODEL)
-
-        chat_completion = client.chat.completions.create(
-            model=GPT_MODEL, messages=prompt_messages
+        response = client.generate(
+            system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
+            conversation=[GenAIMessage("user", str(input_messages))],
         )
 
-        result = chat_completion.choices[0].message.content
-        result = deanonymize(result, alias_dict)
+        result = deanonymize(response.message, alias_dict)
 
         start_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[0]['message_id']}"
         end_message_link = f"https://t.me/c/{str(query.message.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
-
         final_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
-            + f"<i>Costo: ${round(chat_completion.usage.prompt_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['input'] + chat_completion.usage.completion_tokens * GPT_PRICING_PER_TOKEN[GPT_MODEL]['output'], 5)} USD</i>\n"
-            + f"<i>Tokens input: {input_tokens}, Tokens output: {chat_completion.usage.completion_tokens}, Ratio: {int(chat_completion.usage.completion_tokens)/input_tokens}</i>\n\n"
+            + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n\n"
             + str(result)
         )
         try:
@@ -307,8 +281,7 @@ def button(update: Update, context: CallbackContext) -> None:
             )
             _do_resumir(query, context)
         elif query_data[0] == "cancel_summary":
-            query.edit_message_text(
-                text=f"{query.message.text}\n\nResumen cancelado.")
+            query.edit_message_text(text=f"{query.message.text}\n\nResumen cancelado.")
 
 
 @member_exclusive
@@ -330,32 +303,23 @@ def noticia(update: Update, context: CallbackContext) -> None:
 
         titles = [article.title for article in source.articles]
 
-        PROMPT_NEWS_HEADLINES = {
-            "role": "system",
-            "content": "Eres un bot para resumir titulares de noticias. "
+        PROMPT_NEWS_HEADLINES = (
+            "Eres un bot para resumir titulares de noticias. "
             + "Te daré varios titulares recientes y debes intentar inferir qué está pasando, de forma concisa, en no más de 1000 caracteres."
             + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
-        }
-        client = OpenAI(api_key=openai_key)
-        chat_completion = client.chat.completions.create(
-            model=GPT_MODEL,
-            messages=[
-                PROMPT_NEWS_HEADLINES,
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "text",
-                            "text": "\n".join(titles)
-                        }
-                    ],
-                },
-            ],
         )
-        result = chat_completion.choices[0].message.content
 
-        url = source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
-        message = result + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
+        client = ai_client(QUEPASO_MODEL, update)
+
+        result = client.generate(
+            system=PROMPT_NEWS_HEADLINES,
+            conversation=[GenAIMessage("user", "\n".join(titles))],
+        )
+
+        url = (
+            source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
+        )
+        message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
 
         try_msg(
             context.bot,
@@ -373,4 +337,3 @@ def noticia(update: Update, context: CallbackContext) -> None:
             reply_to_message_id=update.message.message_id,
         )
         raise e
-
