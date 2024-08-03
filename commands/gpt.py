@@ -10,15 +10,13 @@ from config.logger import log_command
 from utils import try_msg, get_arg_reply
 from ai.provider import ai_client
 from ai.base import GenAIMessage
+from ai.models import REPLY_MODEL, GB_MODEL, DESIGLIAR_MODEL
 
 
 default_system_prompt = (
     "You are Ofisalitabot, "
     "a quirky and helpful assistant that always follows instructions"
 )
-
-AI_MODEL = "claude-3-5-sonnet"
-
 
 @member_exclusive
 def reply_fill(update: Update, context: CallbackContext) -> None:
@@ -28,7 +26,7 @@ def reply_fill(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
 
-    client = ai_client(AI_MODEL, update)
+    client = ai_client(GB_MODEL, update)
 
     message = get_arg_reply(update)
     reply_message_id = update.message.message_id
@@ -78,7 +76,7 @@ def reply_gpt(update: Update, context: CallbackContext) -> None:
     """
     log_command(update)
 
-    client = ai_client(AI_MODEL, update)
+    client = ai_client(REPLY_MODEL, update)
 
     message = get_arg_reply(update)
     reply_message_id = update.message.message_id
@@ -106,7 +104,7 @@ def desigliar(update: Update, context: CallbackContext) -> None:
     message = get_arg_reply(update)
     reply_message_id = update.message.message_id
 
-    client = ai_client(AI_MODEL, update)
+    client = ai_client(DESIGLIAR_MODEL, update)
 
     conversation = [
         GenAIMessage("user", "asap"),

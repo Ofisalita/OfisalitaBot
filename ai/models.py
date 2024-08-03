@@ -2,7 +2,7 @@ GPT = "gpt-4o"
 CLAUDE = "claude-3-5-sonnet"
 
 # Models used in AI commands
-CHAT_MODEL = CLAUDE
+REPLY_MODEL = CLAUDE
 GB_MODEL = CLAUDE
 DESIGLIAR_MODEL = CLAUDE
 
