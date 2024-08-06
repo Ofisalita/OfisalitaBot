@@ -1,9 +1,15 @@
 import data
 import json
 import math
-from newspaper.google_news import GoogleNewsSource
+import feedparser
+import urllib
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    CallbackQuery,
+)
 from telegram.ext import CallbackContext
 
 from ai.provider import ai_client
@@ -26,6 +32,7 @@ try:
     from config.auth import openai_key
 except ImportError:
     openai_key = None
+
 
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
@@ -84,9 +91,9 @@ def resumir(update: Update, context: CallbackContext) -> None:
             alias_dict = get_alias_dict_from_string(
                 update.message.reply_to_message.text
             )
-            prompt_text = anonymize([update.message.reply_to_message.text], alias_dict)[
-                0
-            ]
+            prompt_text = anonymize(
+                [update.message.reply_to_message.text], alias_dict
+            )[0]
             response = client.generate(
                 system=PROMPT_SYSTEM_MESSAGE_SINGLE,
                 conversation=[GenAIMessage("user", prompt_text)],
@@ -165,7 +172,9 @@ def resumir(update: Update, context: CallbackContext) -> None:
             },
         ]
 
-        input_tokens = num_tokens_from_string(str(prompt_messages), RESUMIR_MODEL)
+        input_tokens = num_tokens_from_string(
+            str(prompt_messages), RESUMIR_MODEL
+        )
         # Based on real usage data
         expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
@@ -185,7 +194,8 @@ def resumir(update: Update, context: CallbackContext) -> None:
                             ),
                         ),
                         InlineKeyboardButton(
-                            "Cancelar", callback_data=json.dumps(["cancel_summary"])
+                            "Cancelar",
+                            callback_data=json.dumps(["cancel_summary"]),
                         ),
                     ],
                 ]
@@ -223,7 +233,9 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        input_tokens = num_tokens_from_string(str(input_messages), RESUMIR_MODEL)
+        input_tokens = num_tokens_from_string(
+            str(input_messages), RESUMIR_MODEL
+        )
 
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
@@ -281,7 +293,9 @@ def button(update: Update, context: CallbackContext) -> None:
             )
             _do_resumir(query, context)
         elif query_data[0] == "cancel_summary":
-            query.edit_message_text(text=f"{query.message.text}\n\nResumen cancelado.")
+            query.edit_message_text(
+                text=f"{query.message.text}\n\nResumen cancelado."
+            )
 
 
 @member_exclusive
@@ -294,14 +308,10 @@ def noticia(update: Update, context: CallbackContext) -> None:
         if not arg:
             return
 
-        source = GoogleNewsSource(
-            country="CL",
-            language="es",
-            max_results=10,
-        )
-        source.build(top_news=False, keyword=arg)
-
-        titles = [article.title for article in source.articles]
+        q = urllib.parse.quote_plus(arg)
+        url = f"https://news.google.com/rss/search?hl=es-419&gl=CL&ceid=CL:es-419&q={q}"
+        rss = feedparser.parse(url)
+        titles = [article.title for article in rss.entries]
 
         PROMPT_NEWS_HEADLINES = (
             "Eres un bot para resumir titulares de noticias. "
@@ -316,10 +326,9 @@ def noticia(update: Update, context: CallbackContext) -> None:
             conversation=[GenAIMessage("user", "\n".join(titles))],
         )
 
-        url = (
-            source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
+        message = (
+            result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
         )
-        message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
 
         try_msg(
             context.bot,
