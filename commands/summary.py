@@ -1,7 +1,8 @@
 import data
 import json
 import math
-from newspaper.google_news import GoogleNewsSource
+import feedparser
+import urllib
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from telegram.ext import CallbackContext
@@ -26,6 +27,7 @@ try:
     from config.auth import openai_key
 except ImportError:
     openai_key = None
+
 
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
@@ -294,14 +296,11 @@ def noticia(update: Update, context: CallbackContext) -> None:
         if not arg:
             return
 
-        source = GoogleNewsSource(
-            country="CL",
-            language="es",
-            max_results=10,
-        )
-        source.build(top_news=False, keyword=arg)
+        q = urllib.parse.quote_plus(arg)
+        url = f'https://news.google.com/rss/search?hl=es-419&gl=CL&ceid=CL:es-419&q={q}'
+        rss = feedparser.parse(url)
+        titles = [article.title for article in rss.entries]
 
-        titles = [article.title for article in source.articles]
 
         PROMPT_NEWS_HEADLINES = (
             "Eres un bot para resumir titulares de noticias. "
@@ -316,9 +315,6 @@ def noticia(update: Update, context: CallbackContext) -> None:
             conversation=[GenAIMessage("user", "\n".join(titles))],
         )
 
-        url = (
-            source.url + "search?q=" + "%20".join(arg.split(" ")) + source.gnews._ceid()
-        )
         message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
 
         try_msg(
