@@ -13,7 +13,6 @@ dnspython==1.16.0
 feedparser==6.0.11
 filelock==3.15.4
 fsspec==2024.6.1
-gnews==0.3.7
 h11==0.14.0
 httpcore==1.0.5
 httpx==0.27.0
@@ -22,7 +21,6 @@ idna==3.7
 joblib==1.4.2
 lxml==5.2.2
 lxml_html_clean==0.1.1
-newspaper4k==0.9.3
 nltk==3.8.1
 numpy==2.0.0
 openai==1.35.1
