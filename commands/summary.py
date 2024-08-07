@@ -86,9 +86,11 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     if not cmd.arg and msg.reply_to_message:
         alias_dict = get_alias_dict_from_string(msg.reply_to_message.text)
         prompt_text = anonymize([msg.reply_to_message.text], alias_dict)[0]
+        cmd.opts.pop("m", None) and cmd.opts.pop("model", None)
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_SINGLE,
             conversation=[GenAIMessage("user", prompt_text)],
+            **cmd.opts,
         )
         result = deanonymize(response.message, alias_dict)
         message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{msg.reply_to_message.message_id}"
@@ -178,7 +180,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         ai_model = RESUMIR_MODEL
         if opts:
             opts = json.loads(opts.group(1))
-            ai_model = opts.get("m") or opts.get("model") or ai_model
+            ai_model = opts.pop("m", None) or opts.pop("model", None) or RESUMIR_MODEL
         client = ai_client(model=ai_model, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
@@ -202,6 +204,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
             conversation=[GenAIMessage("user", str(input_messages))],
+            **opts,
         )
 
         result = deanonymize(response.message, alias_dict)
