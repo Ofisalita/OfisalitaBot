@@ -18,6 +18,7 @@ class GPTClient(AbstractGenAIClient):
     def generate(
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
+        system = self.add_extra_prompt(system, kwargs)
         system_message = [{"role": "system", "content": system}] if system else []
         parsed_kwargs = {
             k: (float(v) if k in ["temperature", "max_tokens", "top_k", "top_p"] else v)

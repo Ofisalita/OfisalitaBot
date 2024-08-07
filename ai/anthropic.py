@@ -19,6 +19,7 @@ class ClaudeClient(AbstractGenAIClient):
     def generate(
         self, conversation: list[GenAIMessage], system: str = "", **kwargs
     ) -> GenAIResponse:
+        system = self.add_extra_prompt(system, kwargs)
         parsed_kwargs = {
             k: (
                 float(v)
