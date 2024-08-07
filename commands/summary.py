@@ -17,7 +17,7 @@ from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
 from ai.models import RESUMIR_MODEL, QUEPASO_MODEL
-from commands.base import Command
+from commands.base import Command, CallbackQueryCommand
 from commands.decorators import command
 from utils import (
     num_tokens_from_string,
@@ -212,13 +212,12 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
 def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     msg = query.message
     try:
-        opts = re.search(r"OPTS: (\{.*\})", msg.text)
-        ai_model = RESUMIR_MODEL
-        if opts:
-            opts = json.loads(opts.group(1))
-            ai_model = opts.pop("m", None) or opts.pop("model", None) or RESUMIR_MODEL
-        else:
-            opts = {}
+        cmd = CallbackQueryCommand(query)
+        cmd.use_default_opt("prompt")
+
+        ai_model = (
+            cmd.opts.pop("m", None) or cmd.opts.pop("model", None) or RESUMIR_MODEL
+        )
         client = ai_client(model=ai_model, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
@@ -242,7 +241,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
             conversation=[GenAIMessage("user", str(input_messages))],
-            **opts,
+            **cmd.opts,
         )
 
         result = deanonymize(response.message, alias_dict)

@@ -1,6 +1,7 @@
 import re
+import json
 
-from telegram import Message
+from telegram import Message, CallbackQuery
 from utils import strip_quotes
 
 
@@ -73,4 +74,24 @@ class Command:
         e.g. /command(Hello guys!) -> /command([default_key]=Hello guys!)
         """
         if len(self.opts.values()) == 1 and list(self.opts.values())[0] == "True":
-            self.opts = {[default_key]: list(self.opts.keys())[0]}
+            self.opts = {default_key: list(self.opts.keys())[0]}
+
+
+class CallbackQueryCommand(Command):
+    """
+    Fake Command object to parse CallbackQuery objects.
+    """
+
+    def __init__(self, query: CallbackQuery):
+        super().__init__(query.message)
+
+    def _parse(self):
+        opts = re.search(r"OPTS: (\{.*\})", self.message_obj.text)
+        opts = opts.group(1) if opts else None
+        return {"command": None, "opts": opts, "arg": None}
+
+    def _parse_opts(self, opts):
+        return json.loads(opts) if opts else {}
+
+    def get_arg_reply(self) -> str:
+        pass
