@@ -20,31 +20,13 @@ class ClaudeClient(AbstractGenAIClient):
         self, conversation: list[GenAIMessage], system: str = "", **kwargs
     ) -> GenAIResponse:
         system = self.add_extra_prompt(system, kwargs)
-        parsed_kwargs = {
-            k: (
-                float(v)
-                if k
-                in [
-                    "frequency_penalty",
-                    "top_logprobs",
-                    "max_tokens",
-                    "n",
-                    "presence_penalty",
-                    "seed",
-                    "temperature",
-                    "top_p",
-                ]
-                else v
-            )
-            for k, v in kwargs.items()
-        }
-        max_tokens = parsed_kwargs.pop("max_tokens", 4096)
+        max_tokens = kwargs.pop("max_tokens", 4096)
         request = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,
             system=system,
             messages=[msg.to_dict() for msg in conversation],
-            **parsed_kwargs
+            **kwargs
         )
         response = self.parse_response(request)
         self.save_request(response)

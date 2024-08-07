@@ -2,7 +2,7 @@ import re
 import json
 
 from telegram import Message, CallbackQuery
-from utils import strip_quotes
+from utils import strip_quotes, parse_str
 
 
 class Command:
@@ -53,7 +53,7 @@ class Command:
                 # If there is no value, assume it's a boolean flag
                 o = (o[0], str(True))
             key = strip_quotes(o[0].strip())
-            value = strip_quotes(o[1].strip())
+            value = parse_str(strip_quotes(o[1].strip()))
             opts_pairs.append((key, value))
         opts_dict = dict(opts_pairs)
         return opts_dict

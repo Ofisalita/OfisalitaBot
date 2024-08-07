@@ -330,3 +330,19 @@ def strip_quotes(string: str) -> str:
     ):
         return string[1:-1]
     return string
+
+
+def parse_str(string: str) -> str:
+    try:
+        return int(string)
+    except ValueError:
+        pass
+    try:
+        return float(string)
+    except ValueError:
+        pass
+    if string.lower() == "true":
+        return True
+    if string.lower() == "false":
+        return False
+    return string
