@@ -100,8 +100,12 @@ def command(member_exclusive: bool = False, group_exclusive: bool = False):
                 else:
                     func(update, context)
             except Exception as e:
-                update.message.reply_text(
-                    f"Ocurrió un error uwu:\n{str(type(e).__name__)}: {str(e)}",
+                try_msg(
+                    context.bot,
+                    chat_id=update.message.chat_id,
+                    parse_mode="HTML",
+                    text=f"Ocurrió un error uwu:\n{str(type(e).__name__)}: {str(e)}",
+                    reply_to_message_id=update.message.message_id,
                 )
                 raise e
             return

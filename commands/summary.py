@@ -25,6 +25,7 @@ from utils import (
     get_alias_dict_from_messages_list,
     anonymize,
     deanonymize,
+    try_msg,
 )
 
 MAX_MESSAGES_TO_SUMMARIZE = 1000
@@ -94,12 +95,32 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
         )
         result = deanonymize(response.message, alias_dict)
         message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{msg.reply_to_message.message_id}"
+        # Given that the result can break different parsers, we try to send it in different formats.
+        # TODO: Better way to handle this
         try:
-            msg.reply_html(
-                f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}'
+            try_msg(
+                context.bot,
+                chat_id=msg.chat_id,
+                parse_mode="HTML",
+                text=f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}',
+                reply_to_message_id=msg.message_id,
             )
         except Exception:
-            msg.reply_markdown(f"Resumen del [mensaje]({message_link}):\n\n{result}")
+            try:
+                try_msg(
+                    context.bot,
+                    chat_id=msg.chat_id,
+                    parse_mode="Markdown",
+                    text=f"Resumen del [mensaje]({message_link}):\n\n{result}",
+                    reply_to_message_id=msg.message_id,
+                )
+            except Exception:
+                try_msg(
+                    context.bot,
+                    chat_id=msg.chat_id,
+                    text=f"Resumen del mensaje:\n\n{result}",
+                    reply_to_message_id=msg.message_id,
+                )
         return
 
     # Summarize N messages
@@ -107,14 +128,20 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     try:
         n = int(cmd.arg)
     except (ValueError, TypeError):
-        msg.reply_text(
-            "Debes indicar la cantidad de mensajes hacia atrás que quieres resumir."
+        try_msg(
+            context.bot,
+            chat_id=msg.chat_id,
+            text="Debes indicar la cantidad de mensajes hacia atrás que quieres resumir.",
+            reply_to_message_id=msg.message_id,
         )
         return
 
     if n and n > MAX_MESSAGES_TO_SUMMARIZE:
-        msg.reply_text(
-            f"El máximo de mensajes a resumir es de {MAX_MESSAGES_TO_SUMMARIZE}."
+        try_msg(
+            context.bot,
+            chat_id=msg.chat_id,
+            text=f"El máximo de mensajes a resumir es de {MAX_MESSAGES_TO_SUMMARIZE}.",
+            reply_to_message_id=msg.message_id,
         )
         return
 
@@ -134,8 +161,11 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     ]
 
     if not input_messages:
-        msg.reply_text(
-            "No hay mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos."
+        try_msg(
+            context.bot,
+            chat_id=msg.chat_id,
+            text="No hay mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos.",
+            reply_to_message_id=msg.message_id,
         )
         return
 
@@ -152,9 +182,13 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     # Based on real usage data
     expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
-    msg.reply_html(
-        f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(RESUMIR_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n"
-        + (f"\nOPTS: {json.dumps(cmd.opts)}" if cmd.opts else ""),
+    try_msg(
+        context.bot,
+        chat_id=msg.chat_id,
+        parse_mode="HTML",
+        reply_to_message_id=msg.message_id,
+        text=f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(RESUMIR_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n"
+        + (f"\nOPTS: {json.dumps(cmd.opts, ensure_ascii=False)}" if cmd.opts else ""),
         reply_markup=InlineKeyboardMarkup(
             [
                 [
@@ -170,7 +204,6 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
                 ],
             ]
         ),
-        quote=True,
     )
 
 
@@ -212,23 +245,55 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
 
         start_message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{input_messages[0]['message_id']}"
         end_message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
-        final_message = (
+
+        # Given that the result can break different parsers, we try to send it in different formats.
+        # TODO: Better way to handle this
+        html_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
             + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n\n"
             + str(result)
         )
+        markdown_message = (
+            f"Resumen de {len(input_messages)} mensajes [Inicio]({start_message_link}) - [Fin]({end_message_link}]:\n"
+            + f"_Costo: ${round(response.cost, 5)} USD_\n\n"
+            + str(result)
+        )
+        text_message = (
+            f"Resumen de {len(input_messages)} mensajes:\n"
+            + f"Costo: ${round(response.cost, 5)} USD\n\n"
+            + str(result)
+        )
         try:
-            msg.reply_html(
-                final_message,
+            try_msg(
+                context.bot,
+                chat_id=msg.chat_id,
+                parse_mode="HTML",
+                text=html_message,
                 reply_to_message_id=msg.reply_to_message.message_id,
             )
         except Exception:
-            msg.reply_markdown(
-                final_message,
-                reply_to_message_id=msg.reply_to_message.message_id,
-            )
+            try:
+                try_msg(
+                    context.bot,
+                    chat_id=msg.chat_id,
+                    parse_mode="Markdown",
+                    text=markdown_message,
+                    reply_to_message_id=msg.reply_to_message.message_id,
+                )
+            except Exception:
+                try_msg(
+                    context.bot,
+                    chat_id=msg.chat_id,
+                    text=text_message,
+                    reply_to_message_id=msg.reply_to_message.message_id,
+                )
     except Exception as e:
-        msg.reply_text(f"Ocurrió un error al procesar el resumen:\n{e}")
+        try_msg(
+            context.bot,
+            chat_id=msg.chat_id,
+            text=f"Ocurrió un error al procesar el resumen:\n{e}",
+            reply_to_message_id=msg.reply_to_message.message_id,
+        )
         raise e
 
 
@@ -283,5 +348,11 @@ def noticia(update: Update, context: CallbackContext, command: Command) -> None:
 
     message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
 
-    msg.reply_html(message, quote=True)
+    try_msg(
+        context.bot,
+        chat_id=msg.chat_id,
+        parse_mode="HTML",
+        text=message,
+        reply_to_message_id=msg.message_id,
+    )
     return
