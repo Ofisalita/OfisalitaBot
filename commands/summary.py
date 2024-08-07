@@ -97,7 +97,7 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
                 f'Resumen del <a href="{message_link}">mensaje</a>:\n\n{result}'
             )
         except Exception:
-            msg.reply_markdown_v2(f"Resumen del [mensaje]({message_link}):\n\n{result}")
+            msg.reply_markdown(f"Resumen del [mensaje]({message_link}):\n\n{result}")
         return
 
     # Summarize N messages
@@ -131,7 +131,7 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     ]
 
     if not input_messages:
-        msg.text(
+        msg.reply_text(
             "No hay mensajes para resumir. Es posible que lo que intentas resumir no haya sido registrado en la base de datos."
         )
         return
@@ -219,7 +219,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
                 reply_to_message_id=msg.reply_to_message.message_id,
             )
         except Exception:
-            msg.reply_markdown_v2(
+            msg.reply_markdown(
                 final_message,
                 reply_to_message_id=msg.reply_to_message.message_id,
             )
