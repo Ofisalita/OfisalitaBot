@@ -106,10 +106,11 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     n = None
     try:
         n = int(cmd.arg)
-    except ValueError:
+    except (ValueError, TypeError):
         msg.reply_text(
             "Debes indicar la cantidad de mensajes hacia atrás que quieres resumir."
         )
+        return
 
     if n and n > MAX_MESSAGES_TO_SUMMARIZE:
         msg.reply_text(
