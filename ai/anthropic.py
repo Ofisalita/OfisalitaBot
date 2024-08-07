@@ -12,7 +12,7 @@ except ImportError:
 class ClaudeClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = claude_key
-        if self.api_key is None:
+        if self.api_key is None or self.api_key == "":
             raise ValueError("Claude API key not found.")
         return Anthropic(api_key=self.api_key)
 
