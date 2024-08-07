@@ -271,11 +271,13 @@ def noticia(update: Update, context: CallbackContext, command: Command) -> None:
         + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
     )
 
-    client = ai_client(QUEPASO_MODEL, update)
+    ai_model = cmd.opts.pop("m", None) or cmd.opts.pop("model", None) or QUEPASO_MODEL
+    client = ai_client(ai_model, update)
 
     result = client.generate(
         system=PROMPT_NEWS_HEADLINES,
         conversation=[GenAIMessage("user", "\n".join(titles))],
+        **cmd.opts,
     )
 
     message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
