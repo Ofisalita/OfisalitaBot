@@ -199,8 +199,6 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        input_tokens = num_tokens_from_string(str(input_messages), RESUMIR_MODEL)
-
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
             conversation=[GenAIMessage("user", str(input_messages))],
