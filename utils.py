@@ -123,6 +123,11 @@ def send_long_message(bot: Bot, **params) -> None:
 
 
 def get_arg(update: Update) -> str:
+    """
+    Returns the argument of a command.
+
+    DEPRECATED: Use Command.arg instead.
+    """
     try:
         arg = update.message.text[(update.message.text.index(" ") + 1) :]
     except ValueError:
@@ -134,6 +139,8 @@ def get_arg_reply(update: Update) -> str:
     """
     Returns the argument of a command or the text of a reply.
     (Preference towards replies)
+
+    DEPRECATED: Use Command.get_arg_reply instead.
     """
     if update.message.reply_to_message is None:
         return get_arg(update)
