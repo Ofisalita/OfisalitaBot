@@ -95,8 +95,8 @@ def command(member_exclusive: bool = False, group_exclusive: bool = False):
             command = Command(update.message)
             log_command(update)
             try:
-                if inspect.signature(func).parameters.get("command") is not None:
-                    func(update, context, command=command)
+                if len(inspect.signature(func).parameters) == 3:
+                    func(update, context, command)
                 else:
                     func(update, context)
             except Exception as e:
