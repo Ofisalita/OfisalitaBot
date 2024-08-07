@@ -73,7 +73,7 @@ class Command:
 
         e.g. /command(Hello guys!) -> /command([default_key]=Hello guys!)
         """
-        if len(self.opts.values()) == 1 and list(self.opts.values())[0] == "True":
+        if len(self.opts.values()) == 1 and list(self.opts.values())[0] is True:
             self.opts = {default_key: list(self.opts.keys())[0]}
 
 
