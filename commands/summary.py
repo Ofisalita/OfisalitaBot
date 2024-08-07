@@ -215,6 +215,8 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         if opts:
             opts = json.loads(opts.group(1))
             ai_model = opts.pop("m", None) or opts.pop("model", None) or RESUMIR_MODEL
+        else:
+            opts = {}
         client = ai_client(model=ai_model, query=query)
         query_data = json.loads(query.data)
         n = query_data[1]
