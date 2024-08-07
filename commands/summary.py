@@ -300,8 +300,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         raise e
 
 
-# TODO: Refactor. This receives all callback queries, not just the ones from the summary command.
-def button(update: Update, context: CallbackContext) -> None:
+def confirm_resumir(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
     query_data = json.loads(query.data)
     # Only requesting user can answer
