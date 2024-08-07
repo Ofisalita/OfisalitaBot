@@ -217,9 +217,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         )
         try:
             msg.reply_html(
-                f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
-                + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
-                + str(result),
+                final_message,
                 reply_to_message_id=msg.reply_to_message.message_id,
             )
         except Exception:
