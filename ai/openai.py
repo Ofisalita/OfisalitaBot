@@ -19,10 +19,14 @@ class GPTClient(AbstractGenAIClient):
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
         system_message = [{"role": "system", "content": system}] if system else []
+        parsed_kwargs = {
+            k: (float(v) if k in ["temperature", "max_tokens", "top_k", "top_p"] else v)
+            for k, v in kwargs.items()
+        }
         request = self.client.chat.completions.create(
             model=self.model,
             messages=system_message + [msg.to_dict() for msg in conversation],
-            **kwargs
+            **parsed_kwargs
         )
         response = self.parse_response(request)
         self.save_request(response)
