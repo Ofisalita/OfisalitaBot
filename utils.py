@@ -319,3 +319,14 @@ def deanonymize(generated_message, alias_dict):
     for username, alias in alias_dict.items():
         generated_message = generated_message.replace(alias, username)
     return generated_message
+
+
+def strip_quotes(string: str) -> str:
+    if (
+        string.startswith('"')
+        and string.endswith('"')
+        or string.startswith("'")
+        and string.endswith("'")
+    ):
+        return string[1:-1]
+    return string

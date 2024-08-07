@@ -1,6 +1,7 @@
 import re
 
 from telegram import Message
+from utils import strip_quotes
 
 
 class Command:
@@ -37,13 +38,22 @@ class Command:
         """
         if not opts:
             return {}
-        opts_split = opts.split(",")
+        # Regex to split by commas and equals, but not within quotes
+        commas_regex = r'(?!\B"[^"]*),(?![^"]*"\B)'
+        equals_regex = r'(?!\B"[^"]*)=(?![^"]*"\B)'
+
+        # Split by comma to get options
+        opts_split = re.split(commas_regex, opts)
+
+        # Split by equals to get key-value pairs
         opts_pairs = []
-        for p in [opt.split("=") for opt in opts_split]:
-            if len(p) != 2:
-                p = (p[0], str(True))
-            p = (p[0].strip(), p[1].strip())
-            opts_pairs.append(p)
+        for o in [re.split(equals_regex, opt) for opt in opts_split]:
+            if len(o) != 2:
+                # If there is no value, assume it's a boolean flag
+                o = (o[0], str(True))
+            key = strip_quotes(o[0].strip())
+            value = strip_quotes(o[1].strip())
+            opts_pairs.append((key, value))
         opts_dict = dict(opts_pairs)
         return opts_dict
 
