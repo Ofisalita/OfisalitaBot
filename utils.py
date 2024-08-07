@@ -13,12 +13,14 @@ word_file = "static/words.txt"
 WORDS = open(word_file).read().splitlines()
 LETTER_DICTIONARY = {}
 for character in ascii_lowercase:
-    LETTER_DICTIONARY[character] = [word for word in WORDS
-                                    if word.lower().startswith(character)]
+    LETTER_DICTIONARY[character] = [
+        word for word in WORDS if word.lower().startswith(character)
+    ]
 
 
-def _try_send(bot: Bot, attempts: int,
-              function: callable, error_message: str, **params):
+def _try_send(
+    bot: Bot, attempts: int, function: callable, error_message: str, **params
+):
     """
     Make multiple attempts to send a message.
     """
@@ -28,16 +30,23 @@ def _try_send(bot: Bot, attempts: int,
         try:
             ret = function(**params)
         except TelegramError as e:
-            logger.error((
-                f"[Attempt {attempt}/{attempts}] {error_message} {chat_id} "
-                f"raised following error: {type(e).__name__}: {e}"))
+            logger.error(
+                (
+                    f"[Attempt {attempt}/{attempts}] {error_message} {chat_id} "
+                    f"raised following error: {type(e).__name__}: {e}"
+                )
+            )
         else:
             break
         attempt += 1
 
     if attempt > attempts:
-        logger.error((f"Max attempts reached for chat {str(chat_id)}."
-                      "Aborting message and raising exception."))
+        logger.error(
+            (
+                f"Max attempts reached for chat {str(chat_id)}."
+                "Aborting message and raising exception."
+            )
+        )
 
     return ret
 
@@ -47,8 +56,7 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
     Make multiple attempts to send a text message.
     """
     error_message = "Messaging chat"
-    message = _try_send(bot, attempts, bot.send_message,
-                        error_message, **params)
+    message = _try_send(bot, attempts, bot.send_message, error_message, **params)
     if message:
         data.Messages.add(
             message.message_id,
@@ -56,7 +64,7 @@ def try_msg(bot: Bot, attempts: int = 2, **params) -> None:
             message.from_user.id,
             message.from_user.username,
             message.text,
-            message.reply_to_message.message_id if message.reply_to_message else None
+            message.reply_to_message.message_id if message.reply_to_message else None,
         )
 
 
@@ -107,7 +115,7 @@ def send_long_message(bot: Bot, **params) -> None:
         if slice_index <= 0:
             slice_index = maxl
         sliced_text = text[:slice_index]
-        rest_text = text[slice_index + 1:]
+        rest_text = text[slice_index + 1 :]
         try_msg(bot, text=sliced_text, **params)
         send_long_message(bot, text=rest_text, **params_copy)
     else:
@@ -116,7 +124,7 @@ def send_long_message(bot: Bot, **params) -> None:
 
 def get_arg(update: Update) -> str:
     try:
-        arg = update.message.text[(update.message.text.index(" ") + 1):]
+        arg = update.message.text[(update.message.text.index(" ") + 1) :]
     except ValueError:
         arg = ""
     return arg
@@ -152,15 +160,15 @@ def generate_acronym(string: str) -> str:
     """
 
     parentheses = (["(", "[", "{"], [")", "]", "}"])
-    bra, ket = '', ''
+    bra, ket = "", ""
 
     if string[0] in parentheses[0]:
         bra = string[0]
         bra_index = parentheses[0].index(bra)
         ket = parentheses[1][bra_index]
 
-    delimiters = list(filter(None, ['*', ':', bra, ket]))
-    regex_pattern = fr"\s+|({'|'.join(map(re.escape, delimiters))})"
+    delimiters = list(filter(None, ["*", ":", bra, ket]))
+    regex_pattern = rf"\s+|({'|'.join(map(re.escape, delimiters))})"
 
     string_list = list(filter(None, re.split(regex_pattern, string)))
 
@@ -200,8 +208,7 @@ def guard_reply_to_message(update: Update) -> bool:
     return not update.message.reply_to_message
 
 
-def guard_reply_to_bot_message(update: Update,
-                               context: CallbackContext) -> bool:
+def guard_reply_to_bot_message(update: Update, context: CallbackContext) -> bool:
     """
     Guard statement:
     Verifies if a reply is replying to a message from the actual bot.
@@ -223,9 +230,9 @@ def guard_hashtag(content: str, match: str) -> bool:
     return not content.startswith(match)
 
 
-def guard_editable_bot_message(update: Update,
-                               context: CallbackContext,
-                               match: str) -> bool:
+def guard_editable_bot_message(
+    update: Update, context: CallbackContext, match: str
+) -> bool:
     """
     Guard statement:
     Verifies if a reply is replying to a message from the actual bot that
@@ -333,6 +340,10 @@ def strip_quotes(string: str) -> str:
 
 
 def parse_str(string: str) -> str:
+    if string.lower() == "true":
+        return True
+    if string.lower() == "false":
+        return False
     try:
         return int(string)
     except ValueError:
@@ -341,8 +352,4 @@ def parse_str(string: str) -> str:
         return float(string)
     except ValueError:
         pass
-    if string.lower() == "true":
-        return True
-    if string.lower() == "false":
-        return False
     return string
