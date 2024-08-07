@@ -1,4 +1,6 @@
 from abc import ABC, abstractmethod
+from telegram import Update, CallbackQuery
+from typing import Optional
 
 from data import AIRequests
 from ai.pricing import get_model_pricing, get_total_cost
@@ -38,11 +40,22 @@ class GenAIResponse:
 
 
 class AbstractGenAIClient(ABC):
-    def __init__(self, model: str, user_id: int, username: str):
+    def __init__(
+        self,
+        model: str,
+        update: Optional[Update] = None,
+        query: Optional[CallbackQuery] = None,
+    ):
+        if update and query or not update and not query:
+            raise ValueError("Either 'update' or 'query' must be provided")
         self.model = model
-        self.user_id = user_id
-        self.username = username
         self.api_key = None
+        if update:
+            self.user_id = update.effective_user.id
+            self.username = update.effective_user.username
+        elif query:
+            self.user_id = query.message.reply_to_message.from_user.id
+            self.username = query.message.reply_to_message.from_user.username
         self.client = self.create_client()
 
     @abstractmethod

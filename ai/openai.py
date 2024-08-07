@@ -8,7 +8,7 @@ except ImportError:
     openai_key = None
 
 
-class OpenAIGPTClient(AbstractGenAIClient):
+class GPTClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = openai_key
         if self.api_key is None:
@@ -18,10 +18,10 @@ class OpenAIGPTClient(AbstractGenAIClient):
     def generate(
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
+        system_message = [{"role": "system", "content": system}] if system else []
         request = self.client.chat.completions.create(
             model=self.model,
-            messages=[{"role": "system", "content": system}]
-            + [msg.to_dict() for msg in conversation],
+            messages=system_message + [msg.to_dict() for msg in conversation],
             **kwargs
         )
         response = self.parse_response(request)

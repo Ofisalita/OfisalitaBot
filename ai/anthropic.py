@@ -9,7 +9,7 @@ except ImportError:
     claude_key = None
 
 
-class ClaudeGPTClient(AbstractGenAIClient):
+class ClaudeClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = claude_key
         if self.api_key is None:
@@ -17,9 +17,9 @@ class ClaudeGPTClient(AbstractGenAIClient):
         return Anthropic(api_key=self.api_key)
 
     def generate(
-        self, conversation: list[GenAIMessage], system: str = None, **kwargs
+        self, conversation: list[GenAIMessage], system: str = "", **kwargs
     ) -> GenAIResponse:
-        max_tokens = kwargs.pop("max_tokens", 1000)
+        max_tokens = kwargs.pop("max_tokens", 4096)
         request = self.client.messages.create(
             model=self.model,
             max_tokens=max_tokens,

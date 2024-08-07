@@ -83,6 +83,7 @@ Comandos que toman un texto, y lo modifican o procesan de alguna forma.
 - `/slashear (reply)` - Responde con el texto del mensaje al que se responde en un texto camel case con un slash.
 - `/['uwuspeech' | 'uwuspeak' | 'uwuizar' | 'uwu'] [text | reply]` - Responde con el texto del mensaje al que se responde en un texto uwu-ificado.
 - `/repetir [text | reply]` - Responde con el mismo texto del argumento.
+- `/distancia (reply)` - Responde con la cantidad de mensajes que se han enviado entre la invocación y el mensaje al que se le está haciendo reply.
 
 ### OpenAI/GPT
 

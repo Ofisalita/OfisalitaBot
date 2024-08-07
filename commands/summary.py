@@ -1,15 +1,24 @@
 import data
 import json
 import re
+import math
+import feedparser
+import urllib
 
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
+from telegram import (
+    Update,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    CallbackQuery,
+)
 from telegram.ext import CallbackContext
 
 from ai.provider import ai_client
 from ai.base import GenAIMessage
 import ai.pricing as prc
-from commands.decorators import command
+from ai.models import RESUMIR_MODEL, QUEPASO_MODEL
 from commands.base import Command
+from commands.decorators import command
 from utils import (
     num_tokens_from_string,
     get_alias_dict_from_string,
@@ -18,12 +27,6 @@ from utils import (
     deanonymize,
 )
 
-try:
-    from config.auth import openai_key
-except ImportError:
-    openai_key = None
-
-DEFAULT_MODEL = "claude-3-sonnet-20240229"
 MAX_MESSAGES_TO_SUMMARIZE = 1000
 
 PROMPT_SYSTEM_MESSAGE_SINGLE = (
@@ -76,7 +79,7 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     cmd = command
     msg = update.message
 
-    ai_model = cmd.opts.get("m") or cmd.opts.get("model") or DEFAULT_MODEL
+    ai_model = cmd.opts.get("m") or cmd.opts.get("model") or RESUMIR_MODEL
 
     client = ai_client(
         model=ai_model, user_id=msg.from_user.id, username=msg.from_user.username
@@ -143,12 +146,13 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
         },
     ]
 
-    input_tokens = num_tokens_from_string(str(prompt_messages), DEFAULT_MODEL)
-    # TODO: Calculate this based on the input messages
+    input_tokens = num_tokens_from_string(str(prompt_messages), RESUMIR_MODEL)
     expected_output_tokens = 300
+    # Based on real usage data
+    expected_output_tokens = -300 + 86.8 * math.log(input_tokens + 31.697)
 
     msg.reply_html(
-        f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(DEFAULT_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n"
+        f"El resumen de {len(input_messages)} mensajes con <i>{client.model}</i> costará aproximadamente <b>${round(prc.get_total_cost(RESUMIR_MODEL, input_tokens, expected_output_tokens), 3)} USD</b>\n"
         + (f"\nOPTS: {json.dumps(cmd.opts)}" if cmd.opts else ""),
         reply_markup=InlineKeyboardMarkup(
             [
@@ -173,7 +177,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
     msg = query.message
     try:
         opts = re.search(r"OPTS: (\{.*\})", msg.text)
-        ai_model = DEFAULT_MODEL
+        ai_model = RESUMIR_MODEL
         if opts:
             opts = json.loads(opts.group(1))
             ai_model = opts.get("m") or opts.get("model") or ai_model
@@ -201,7 +205,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         alias_dict = get_alias_dict_from_messages_list(input_messages)
         input_messages = anonymize(input_messages, alias_dict)
 
-        input_tokens = num_tokens_from_string(str(input_messages), DEFAULT_MODEL)
+        input_tokens = num_tokens_from_string(str(input_messages), RESUMIR_MODEL)
 
         response = client.generate(
             system=PROMPT_SYSTEM_MESSAGE_MULTIPLE,
@@ -214,8 +218,7 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
         end_message_link = f"https://t.me/c/{str(msg.chat_id).replace('-100','')}/{input_messages[-1]['message_id']}"
         final_message = (
             f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
-            + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
-            + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
+            + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n\n"
             + str(result)
         )
         try:
@@ -253,3 +256,37 @@ def button(update: Update, context: CallbackContext) -> None:
             _do_resumir(query, context)
         elif query_data[0] == "cancel_summary":
             query.edit_message_text(text=f"{query.message.text}\n\nResumen cancelado.")
+
+
+@command(member_exclusive=True)
+def noticia(update: Update, context: CallbackContext, command: Command) -> None:
+    """
+    Summarizes a news article from Google News headlines.
+    """
+    cmd = command
+    msg = update.message
+    if not cmd.arg:
+        return
+
+    q = urllib.parse.quote_plus(cmd.arg)
+    url = f"https://news.google.com/rss/search?hl=es-419&gl=CL&ceid=CL:es-419&q={q}"
+    rss = feedparser.parse(url)
+    titles = [article.title for article in rss.entries]
+
+    PROMPT_NEWS_HEADLINES = (
+        "Eres un bot para resumir titulares de noticias. "
+        + "Te daré varios titulares recientes y debes intentar inferir qué está pasando, de forma concisa, en no más de 1000 caracteres."
+        + "No incluyas nada más que el resumen en tu mensaje. No menciones las fuentes."
+    )
+
+    client = ai_client(QUEPASO_MODEL, update)
+
+    result = client.generate(
+        system=PROMPT_NEWS_HEADLINES,
+        conversation=[GenAIMessage("user", "\n".join(titles))],
+    )
+
+    message = result.message + "\n\n" + f"⛲️ <a href='{url}'>Google News</a>"
+
+    msg.reply_html(message, quote=True)
+    return
