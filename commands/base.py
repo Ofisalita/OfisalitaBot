@@ -65,3 +65,12 @@ class Command:
         if self.message_obj.reply_to_message:
             return self.message_obj.reply_to_message.text
         return self.arg
+
+    def use_default_opt(self, default_key: str):
+        """
+        If only a single flag option is provided, assume it's the default key.
+
+        e.g. /command(Hello guys!) -> /command([default_key]=Hello guys!)
+        """
+        if len(self.opts.values()) == 1 and list(self.opts.values())[0] == "True":
+            self.opts = {[default_key]: list(self.opts.keys())[0]}

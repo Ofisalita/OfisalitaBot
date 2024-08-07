@@ -80,6 +80,7 @@ def resumir(update: Update, context: CallbackContext, command: Command) -> None:
     """
     cmd = command
     msg = update.message
+    cmd.use_default_opt("prompt")
 
     ai_model = cmd.opts.get("m") or cmd.opts.get("model") or RESUMIR_MODEL
 
@@ -328,6 +329,7 @@ def noticia(update: Update, context: CallbackContext, command: Command) -> None:
     msg = update.message
     if not cmd.arg:
         return
+    cmd.use_default_opt("prompt")
 
     q = urllib.parse.quote_plus(cmd.arg)
     url = f"https://news.google.com/rss/search?hl=es-419&gl=CL&ceid=CL:es-419&q={q}"
