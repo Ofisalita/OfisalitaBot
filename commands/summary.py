@@ -219,7 +219,6 @@ def _do_resumir(query: CallbackQuery, context: CallbackContext) -> None:
             msg.reply_html(
                 f'Resumen de {len(input_messages)} mensajes [<a href="{start_message_link}">Inicio</a> - <a href="{end_message_link}">Fin</a>]:\n'
                 + f"<i>Costo: ${round(response.cost, 5)} USD</i>\n"
-                + f"<i>Tokens input: {input_tokens}, Tokens output: {response.usage['output']}, Ratio: {int(response.usage['output'])/input_tokens}</i>\n\n"
                 + str(result),
                 reply_to_message_id=msg.reply_to_message.message_id,
             )
