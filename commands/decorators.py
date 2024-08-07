@@ -101,7 +101,7 @@ def command(member_exclusive: bool = False, group_exclusive: bool = False):
                     func(update, context)
             except Exception as e:
                 update.message.reply_text(
-                    f"Ocurrió un error uwu:\n{str(e)}",
+                    f"Ocurrió un error uwu:\n{str(type(e).__name__)}: {str(e)}",
                 )
                 raise e
             return
