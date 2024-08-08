@@ -332,7 +332,22 @@ def noticia(update: Update, context: CallbackContext, command: Command) -> None:
     q = urllib.parse.quote_plus(cmd.arg)
     url = f"https://news.google.com/rss/search?hl=es-419&gl=CL&ceid=CL:es-419&q={q}"
     rss = feedparser.parse(url)
-    titles = [article.title for article in rss.entries][:10]
+
+    def parse_entries(entries):
+        titles = []
+        for entry in entries:
+            if "<ol><li>" in entry.description:
+                regex = r"<a href=\"(?:.*?)\">(.*?)<\/a>"
+                matches = re.findall(
+                    regex,
+                    entry.description.replace("\n", ""),
+                )
+                titles.extend(matches)
+            else:
+                titles.append(entry.title)
+        return titles
+
+    titles = parse_entries(rss.entries)[:10]
 
     PROMPT_NEWS_HEADLINES = (
         "Eres un bot para resumir titulares de noticias. "
