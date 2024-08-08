@@ -337,9 +337,9 @@ def noticia(update: Update, context: CallbackContext, command: Command) -> None:
         titles = []
         for entry in entries:
             if "<ol><li>" in entry.description:
-                regex = r"<a href=\"(?:.*?)\">(.*?)<\/a>"
+                headline_regex = r"<a href=\".*?\">(.*?)<\/a>"
                 matches = re.findall(
-                    regex,
+                    headline_regex,
                     entry.description.replace("\n", ""),
                 )
                 titles.extend(matches)
