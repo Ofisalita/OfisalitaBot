@@ -12,13 +12,14 @@ except ImportError:
 class ClaudeClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = claude_key
-        if self.api_key is None:
+        if self.api_key is None or self.api_key == "":
             raise ValueError("Claude API key not found.")
         return Anthropic(api_key=self.api_key)
 
     def generate(
         self, conversation: list[GenAIMessage], system: str = "", **kwargs
     ) -> GenAIResponse:
+        system = self.add_extra_prompt(system, kwargs)
         max_tokens = kwargs.pop("max_tokens", 4096)
         request = self.client.messages.create(
             model=self.model,

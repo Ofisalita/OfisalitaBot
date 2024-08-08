@@ -45,7 +45,7 @@ def ai_client(
     for _brand in SUPPORTED_MODELS:
         if model == _brand or model in SUPPORTED_MODELS[_brand]["alias"]:
             return SUPPORTED_MODELS[_brand]["client"](
-                SUPPORTED_MODELS[_brand][0], update, query
+                SUPPORTED_MODELS[_brand]["models"][0], update, query
             )
 
     # Find by model name prefix

@@ -11,13 +11,14 @@ except ImportError:
 class GPTClient(AbstractGenAIClient):
     def create_client(self):
         self.api_key = openai_key
-        if self.api_key is None:
+        if self.api_key is None or self.api_key == "":
             raise ValueError("OpenAI API key not found.")
         return OpenAI(api_key=self.api_key)
 
     def generate(
         self, conversation: list[GenAIMessage], system: str = None, **kwargs
     ) -> GenAIResponse:
+        system = self.add_extra_prompt(system, kwargs)
         system_message = [{"role": "system", "content": system}] if system else []
         request = self.client.chat.completions.create(
             model=self.model,

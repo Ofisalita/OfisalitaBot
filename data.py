@@ -169,7 +169,10 @@ class AIRequests:
 
     @staticmethod
     def get(
-        user_id: int = None, username: str = None, datetime_from: int = None, datetime_to: int = None
+        user_id: int = None,
+        username: str = None,
+        datetime_from: int = None,
+        datetime_to: int = None,
     ) -> list[sqlite3.Row]:
         """
         Gets AI requests from the database.

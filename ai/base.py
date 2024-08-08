@@ -85,3 +85,9 @@ class AbstractGenAIClient(ABC):
             output_price_per_m=response.pricing["output"],
             cost=response.cost,
         )
+
+    def add_extra_prompt(self, original_prompt: str, opts: dict) -> str:
+        extra_prompt = opts.pop("prompt", None) or opts.pop("p", None)
+        return original_prompt + (
+            f"\nAdemás, considera lo siguiente: {extra_prompt}" if extra_prompt else ""
+        )
