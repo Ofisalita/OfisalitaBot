@@ -336,6 +336,17 @@ def deanonymize(generated_message, alias_dict):
 
 
 def strip_quotes(string: str) -> str:
+    """
+    Removes a single pair of matching quotation marks from the beginning and
+    end of the string if they exist.
+
+    Examples:
+        "Hello" -> Hello    # Removed
+
+        'This is a "test"' -> This is a "test"  # Removed
+
+        Baloian said "Hello" -> Baloian said "Hello"    # Not removed
+    """
     if (
         string.startswith('"')
         and string.endswith('"')
@@ -347,6 +358,9 @@ def strip_quotes(string: str) -> str:
 
 
 def parse_str(string: str) -> str:
+    """
+    Parses a string into a boolean, integer, float or string.
+    """
     if string.lower() == "true":
         return True
     if string.lower() == "false":
