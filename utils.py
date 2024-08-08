@@ -357,7 +357,7 @@ def strip_quotes(string: str) -> str:
     return string
 
 
-def parse_str(string: str) -> str:
+def parse_str(string: str) -> bool | int | float | str:
     """
     Parses a string into a boolean, integer, float or string.
     """
