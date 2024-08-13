@@ -15,6 +15,7 @@ class Command:
         self.message_obj = message
         parsed = self._parse()
         self.command = parsed["command"]
+        self.target = parsed["target"]
         self.opts = self._parse_opts(parsed["opts"])
         self.arg = parsed["arg"]
 
@@ -24,7 +25,7 @@ class Command:
         options and argument (text).
         """
         match = re.match(
-            r"^(?P<command>\/\w+)(?:\((?P<opts>.*?)\))?(?: (?P<arg>.*))?$",
+            r"^(?P<command>\/\w+)(?:@(?P<target>\w*))?(?:\((?P<opts>.*?)\))?(?: (?P<arg>.*))?$",
             self.message_obj.text,
             re.DOTALL,
         )
@@ -95,3 +96,4 @@ class CallbackQueryCommand(Command):
 
     def get_arg_reply(self) -> str:
         pass
+        
