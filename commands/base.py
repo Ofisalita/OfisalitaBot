@@ -89,11 +89,10 @@ class CallbackQueryCommand(Command):
     def _parse(self):
         opts = re.search(r"OPTS: (\{.*\})", self.message_obj.text)
         opts = opts.group(1) if opts else None
-        return {"command": None, "opts": opts, "arg": None}
+        return {"command": None, "target": None, "opts": opts, "arg": None}
 
     def _parse_opts(self, opts):
         return json.loads(opts) if opts else {}
 
     def get_arg_reply(self) -> str:
         pass
-        
