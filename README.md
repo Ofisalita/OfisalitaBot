@@ -1,6 +1,6 @@
 # OfisalitaBot
 
-- [Contibuir al Bot](#contribución)
+- [Contribuir al Bot](#contribución)
 - [Usar el Bot](#uso)
 
 ## Contribución
